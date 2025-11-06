@@ -1,0 +1,200 @@
+/**
+ * All of the CSS for your public-facing functionality should be
+ * included in this file.
+ */
+.ldl-view-documents .fav-icon {
+  display: flex;
+  align-items: center;       
+  width: 100%;             
+  gap: 0.5rem;               }
+
+.ldl-view-documents .fav-icon .ldl-document-title {
+  margin: 0 0 10px 0;                
+  
+}
+
+.ldl-view-documents .fav-icon .ldl-favorite-btn {
+  margin-left: auto;     
+  display: inline-flex;
+  align-items: center;
+}
+
+.ldl-view-documents .fav-icon .ldl-icon img {
+  width: 25px !important;  
+  height: 25px !important;
+  cursor: pointer;
+
+}
+ table.ld-doc-frnt{
+    border: 1px solid #c3c4c7 !important;
+ }
+ table.ld-doc-frnt thead{
+    background: #ffffff;
+ }
+ table.ld-doc-frnt.dataTable thead th, 
+ table.ld-doc-frnt.dataTable thead td{
+    border-bottom: 1px solid #c3c4c7;
+ }
+ table.ld-doc-frnt.dataTable thead td{
+    border-top: 0px !important;
+ }
+ table.ld-doc-frnt.dataTable th, 
+ table.ld-doc-frnt.dataTable td{
+    font-size: 14px;
+    line-height: 20px;
+    box-shadow: none !important;
+ }
+ table.ld-doc-frnt.dataTable thead th.ld-doc-tble-title{
+    min-width: 110px;
+ }
+ table.ld-doc-frnt.dataTable thead th.ld-doc-tble-date{
+    min-width: 115px;
+ }
+ table.ld-doc-frnt.dataTable .ld-doc-tble-download a{
+   background: #074b79;
+   border: none;
+   color: #fff;
+    text-decoration: none;
+    text-shadow: none;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    border-radius: 5px;
+    padding: 5px 15px;
+    transition: 0.3s;
+    box-shadow: none !important;
+    margin: 20px 0 0;
+    cursor: pointer;
+ }
+ table.ld-doc-frnt.dataTable .ld-doc-tble-download a:hover{
+    opacity: .9;
+ }
+ table.ld-doc-frnt.dataTable tbody tr:nth-child(even){
+    background-color: #f5f5f5;
+ }
+ #ldl_shortcode_table_filter{
+    margin-bottom: 10px;
+ }
+ #ldl_shortcode_table_wrapper select[name="ldl_shortcode_table_length"], 
+ #ldl_shortcode_table_filter input{
+    border-color: #dbdbdb;
+ }
+span.ld-doc-empty{
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 3px;
+    opacity: .5;
+    font-size: 14px;
+ }
+#ldl_shortcode_table_wrapper a.paginate_button{
+    padding: 3px 5px;
+    min-height: inherit;
+    background: #074b79 !important;
+color: #fff !important;
+    line-height: normal;
+    font-size: 15px;
+    margin: 0 3px;
+    border-radius: 5px;
+}
+
+
+#ldl_shortcode_table_wrapper .dataTables_paginate.paging_simple_numbers{
+    padding-top: 15px;
+}
+.ld-doc-tc{
+    text-align: center;
+}
+#ldl_shortcode_table_wrapper{
+    margin-bottom: 40px;
+}
+
+.select2 button {
+   color: inherit;
+   padding: 0;
+   border: 0;
+   border-radius: 0;
+}
+
+.select2-container .select2-selection--multiple .select2-selection__rendered {
+   margin-inline: 0;
+}
+
+span.select2-search.select2-search--inline {
+   line-height: unset;
+}
+
+textarea.select2-search__field {
+   line-height: 1;
+}
+
+li.select2-selection__choice {
+   display: flex !important;
+   align-items: center;
+   width: max-content;
+   max-width: 100%;
+}
+
+.select2 .select2-selection__choice__remove {
+   bottom: 0;
+}
+
+/* LDL Document Viewer */
+.ldl-modal {
+   position: fixed;
+   z-index: 9999;
+   top: 0; left: 0; right: 0; bottom: 0;
+   background: rgba(0,0,0,0.7);
+   display: flex; align-items: center; justify-content: center;
+}
+.ldl-modal-content {
+   background: #fff;
+   width: 100%;
+   height: 100%;
+   max-width: 90%;
+   max-height: 90%;
+   overflow: auto;
+   padding: 20px;
+   border-radius: 8px;
+}
+.ldl-modal-close {
+   float: right;
+   cursor: pointer;
+   font-size: 24px;
+}
+.ldl-viewer iframe, .ldl-viewer canvas, .ldl-viewer video, .ldl-viewer audio {
+   width: 100%;
+   max-height: 80vh;
+}
+.ldl-modal .ldl-doc-viewer {
+   overflow: hidden; /* hide outer scroll */
+}
+.ldl-modal .ldl-doc-viewer iframe {
+   width: 100%;
+   height: 100%;
+   border: none;
+   display: block;
+}
+
+div#ldlDocViewer {
+   height: 80.5vh;
+}
+/* LDL Document Viewer end */
+
+/* Responsive Starts */
+@media(max-width:990px){
+   table.ld-doc-frnt{
+      display: block;
+      overflow-x: auto;
+   }
+   #ldl_shortcode_table_wrapper #ldl_shortcode_table_length, 
+   #ldl_shortcode_table_wrapper #ldl_shortcode_table_filter{
+      text-align: left;
+   }
+}
+@media(max-width:575px){
+   #ldl_shortcode_table_wrapper #ldl_shortcode_table_filter label{
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-gap: 5px;
+   }
+}

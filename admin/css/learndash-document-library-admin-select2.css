@@ -1,0 +1,11 @@
+.select2 li {
+    margin-bottom: 0px;
+}
+
+.select2-container .select2-search--inline {
+    float: none;
+}
+
+.select2-container .select2-search--inline {
+    display: inline !important;
+}

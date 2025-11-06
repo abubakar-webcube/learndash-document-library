@@ -1,0 +1,249 @@
+/**
+ * All of the CSS for your admin-specific functionality should be
+ * included in this file.
+ */
+
+
+ .ld-document-nav-wrapper {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    background-color: #ffffff;
+    padding: 0px 10px;
+    width: 100%;
+    margin: 30px 0px 30px -20px;
+    border: none;
+    box-shadow: 0px 0px 23px 0px #eee;
+    box-sizing: content-box;
+    overflow-x: auto;
+}
+.ld-document-nav-wrapper a {
+    font-size: 16px;
+    font-weight: 500;
+    color: #41454F;
+    background: none;
+    border: none;
+    padding: 25px 20px;
+    border-bottom: 1px solid transparent;
+    margin: 0px;
+    transition: .3s;
+    outline: 0 !important;
+    box-shadow: none !important;
+}
+.ld-document-nav-wrapper a:hover{
+	background: #fbfbfb;
+	text-decoration: none;
+}
+
+.ld-document-nav-wrapper a.nav-tab-active, 
+.ld-document-nav-wrapper a.nav-tab-active:focus, 
+.ld-document-nav-wrapper a.nav-tab-active:active {
+    color: #007cba;
+    background: #fbfbfb;
+    border-bottom: 2px solid #007cba;
+}
+
+.ld-documents-panel{
+    margin: 20px 20px 0 0;
+    background: #fff;
+    border-radius: 15px;
+    padding: 30px;
+}
+.ld-documents-panel h2{
+    margin: 0px 0px 15px 0px;
+    color: #074b79;
+    font-size: 28px;
+    line-height: 32px;
+    font-weight: 600;
+    position: relative;
+}
+.ld-documents-panel h3{
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 22px;
+    margin: 0px 0 15px 0px;
+    color: #3c434a;
+}
+#ldl_license_options th, 
+#ldl_license_options td{
+    padding: 0px;
+}
+#ldl_license_options th label{
+    color: #5f5f5f;
+    font-size: 13px;
+    font-weight: 700;
+}
+#ldl_license_options td input{
+    padding: 5px 10px;
+    border: 1px solid #dbdbdb;
+    margin-top: 10px;
+}
+#ldl_license_options td input:focus{
+    border: 1px solid #074b79;
+}
+.woo-shrt-code-panel {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 30px;
+}
+.ld-doc-shrt-code-box {
+    padding: 20px;
+    border-radius: 5px;
+    background: #f3f3f3;
+    border: 1px solid #d9d9d9;
+    font-size: 16px;
+    line-height: 22px;
+}
+.ld-doc-shrt-code-box h3 {
+    margin: 0px 0px 15px 0px;
+    color: #074b79;
+    font-size: 22px;
+    line-height: 32px;
+    font-weight: 600;
+}
+.ld-doc-shrt-code-box p {
+    font-size: 16px;
+    line-height: 22px;
+    color: #3c434a;
+    font-weight: 400;
+}
+.ld-doc-shrtcde-panel {
+    background: #fff;
+    border-radius: 5px;
+    padding-left: 0px;
+    box-shadow: 0 4px 8px 0 rgba(89, 89, 89, 0.058), 0 6px 20px 0 rgba(0, 0, 0, 0.125);
+    width: fit-content;
+    display: flex;
+    align-items: center;
+}
+.ld-doc-shrtcde-panel code {
+    background: none;
+}
+.ld-doc-shrtcde-panel button {
+    background: #074b79;
+    padding: 5px;
+    color: #fff;
+    border: 0;
+    border-radius: 0 5px 5px 0;
+    cursor: pointer;
+    outline: none;
+    transition: .1s;
+}
+.ld-doc-shrtcde-panel button:active{
+    opacity: .9;
+}
+.ld-documents-panel .submit{
+    margin: 0px;
+    padding: 0px;
+}
+.ld-documents-panel .submit input{
+    background: #074b79;
+    border: none;
+    color: #fff;
+    text-decoration: none;
+    text-shadow: none;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 20px;
+    border-radius: 5px;
+    padding: 7px 20px;
+    transition: 0.3s;
+    box-shadow: none !important;
+    margin: 20px 0 0;
+    cursor: pointer;
+}
+.ld-documents-panel .submit input:hover{
+    opacity: .9;
+}
+
+#ld_document_upload .inside > div:not(.active) {
+    display: none;
+}
+
+.select2-container--learndash .select2-selection--single .select2-selection__clear {
+    border: 0;
+    padding: 0;
+    background: none;
+    position: absolute !important;
+    top: 0;
+    bottom: 0;
+    left: auto;
+    right: 20px;
+}
+
+span.select2.select2-container {
+    width: 95% !important;
+}
+
+textarea.select2-search__field {
+    box-sizing: border-box;
+    border: none;
+    font-size: 100%;
+    margin-top: 5px;
+    margin-left: 5px;
+    padding: 0;
+    max-width: 100%;
+    resize: none;
+    height: 18px;
+    vertical-align: bottom;
+    font-family: sans-serif;
+    overflow: hidden;
+    word-break: keep-all;
+}
+
+input.select2-search__field {
+    /* width: 0 !important;
+    height: 0 !important; */
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+    /* min-height: 0 !important; */
+    border-radius: 3px;
+}
+
+li.select2-search.select2-search--inline {
+    height: 0;
+    margin: 0;
+}
+
+.select2-container .select2-selection--multiple .select2-selection__rendered {
+    position: relative;
+    width: 100%;
+    overflow: unset;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding-right: 10px;
+}
+
+span.select2-selection__clear {
+    position: absolute;
+    right: 0;
+}
+
+.select2-results__option[aria-selected="true"] {
+    background: #efefef;
+}
+
+
+
+
+
+
+@media(max-width: 782px){
+    .ld-documents-panel{
+        padding: 30px 20px;
+        margin-right: 10px;
+    }
+    .ld-documents-panel h2{
+        font-size: 24px;
+        line-height: 30px;
+    }
+    .ld-documents-panel .submit input{
+        font-size: 14px;
+        padding: 5px 15px;
+    }
+    .woo-shrt-code-panel{
+        grid-template-columns: repeat(1, 1fr);
+    }
+}
