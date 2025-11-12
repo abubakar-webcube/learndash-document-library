@@ -1,0 +1,98 @@
+[
+  {
+    "id": 1,
+    "title": "Agreement-Purchase",
+    "type": "pdf",
+    "size": "108 KB",
+    "folderId": 1,
+    "lastModified": "2025-10-03"
+  },
+  {
+    "id": 2,
+    "title": "General-Information",
+    "type": "docx",
+    "size": "109 KB",
+    "folderId": 1,
+    "lastModified": "2025-10-03"
+  },
+  {
+    "id": 3,
+    "title": "Video-Tutorial",
+    "type": "mp4",
+    "size": "1 MB",
+    "folderId": 2,
+    "lastModified": "2025-10-03"
+  },
+  {
+    "id": 4,
+    "title": "Impact Moderato",
+    "type": "mp3",
+    "size": "746 KB",
+    "folderId": 2,
+    "lastModified": "2025-10-03"
+  },
+  {
+    "id": 5,
+    "title": "Outline",
+    "type": "pdf",
+    "size": "27 KB",
+    "folderId": 3,
+    "lastModified": "2025-10-03"
+  },
+  {
+    "id": 6,
+    "title": "Financial",
+    "type": "xlsx",
+    "size": "81 KB",
+    "folderId": 3,
+    "lastModified": "2025-10-03"
+  },
+  {
+    "id": 7,
+    "title": "Document-Library-Demo",
+    "type": "pdf",
+    "size": "27 KB",
+    "folderId": 4,
+    "lastModified": "2025-10-10"
+  },
+  {
+    "id": 8,
+    "title": "FileBird Screenshot",
+    "type": "png",
+    "size": "68 KB",
+    "folderId": 4,
+    "lastModified": "2025-10-10"
+  },
+  {
+    "id": 9,
+    "title": "FileBird Screenshot",
+    "type": "png",
+    "size": "68 KB",
+    "folderId": 4,
+    "lastModified": "2025-10-10"
+  },
+  {
+    "id": 10,
+    "title": "FileBird Screenshot",
+    "type": "png",
+    "size": "68 KB",
+    "folderId": 4,
+    "lastModified": "2025-10-10"
+  },
+  {
+    "id": 11,
+    "title": "FileBird Screenshot",
+    "type": "png",
+    "size": "68 KB",
+    "folderId": 4,
+    "lastModified": "2025-10-10"
+  },
+  {
+    "id": 12,
+    "title": "FileBird Screenshot",
+    "type": "png",
+    "size": "68 KB",
+    "folderId": 4,
+    "lastModified": "2025-10-10"
+  }
+]

@@ -1,0 +1,39 @@
+{
+  "apiVersion": 2,
+  "name": "learndash/document-libraries",
+  "title": "Document Libraries",
+  "category": "widgets",
+  "icon": "media-document",
+  "description": "Show LearnDash Document Libraries.",
+  "supports": {
+    "html": false
+  },
+  "attributes": {
+    "exclude": {
+      "type": "array",
+      "default": []
+    },
+    "limit": {
+      "type": "number",
+      "default": 9
+    },
+    "libraries": {
+      "type": "array",
+      "default": []
+    },
+    "categories": {
+      "type": "array",
+      "default": []
+    },
+    "layout": {
+      "type": "string",
+      "default": "list"
+    },
+    "search": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "editorScript": "learndash-document-libraries-editor-script",
+  "viewScript": "ldl-document-library-frontend"
+}

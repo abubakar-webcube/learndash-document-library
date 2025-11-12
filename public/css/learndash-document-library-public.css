@@ -198,3 +198,259 @@ div#ldlDocViewer {
       grid-gap: 5px;
    }
 }
+
+/* CSS */
+.ldl-wrapper {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 30px 20px 60px;
+	font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.ldl-title {
+	font-size: 24px;
+	margin: 0 0 15px;
+	font-weight: 600;
+}
+
+.ldl-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	align-items: center;
+	gap: 15px;
+	margin-bottom: 15px;
+}
+
+.ldl-search {
+	position: relative;
+	flex: 1 1 260px;
+	max-width: 420px;
+}
+
+.ldl-search input {
+	width: 100%;
+	padding: 8px 30px 8px 12px;
+	border-radius: 999px;
+	border: 1px solid #d5d8df;
+	font-size: 14px;
+}
+
+.ldl-search-icon {
+	position: absolute;
+	right: 10px;
+	top: 50%;
+	transform: translateY(-50%);
+	font-size: 13px;
+	opacity: 0.6;
+}
+
+.ldl-toolbar-right {
+	display: flex;
+	align-items: center;
+	gap: 15px;
+}
+
+.ldl-per-page span {
+	margin-right: 6px;
+	font-size: 13px;
+	color: #555;
+}
+
+.ldl-per-page select {
+	padding: 4px 8px;
+	border-radius: 4px;
+	border: 1px solid #d5d8df;
+	font-size: 13px;
+}
+
+.ldl-view-toggle button {
+	border: 1px solid #d5d8df;
+	background: #fff;
+	padding: 5px 10px;
+	font-size: 14px;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.ldl-view-toggle button:first-child {
+	border-radius: 6px 0 0 6px;
+	border-right: none;
+}
+
+.ldl-view-toggle button:last-child {
+	border-radius: 0 6px 6px 0;
+}
+
+.ldl-view-toggle button.is-active {
+	background: #111827;
+	color: #fff;
+	border-color: #111827;
+}
+
+.ldl-folders {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-bottom: 20px;
+}
+
+.ldl-folders button {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 10px;
+	border-radius: 999px;
+	border: 1px solid #e5e7eb;
+	background: #f9fafb;
+	font-size: 13px;
+	cursor: pointer;
+}
+
+.ldl-folders button.is-active {
+	background: #111827;
+	color: #fff;
+	border-color: #111827;
+}
+
+.ldl-folder-count {
+	min-width: 24px;
+	text-align: center;
+	border-radius: 999px;
+	font-size: 11px;
+	padding: 2px 6px;
+	background: rgba(0, 0, 0, 0.06);
+}
+
+.ldl-status {
+	margin: 20px 0;
+	font-size: 14px;
+	color: #4b5563;
+}
+
+.ldl-status--error {
+	color: #b91c1c;
+}
+
+.ldl-items {
+	display: grid;
+	gap: 18px;
+}
+
+.ldl-items-grid {
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.ldl-items-list {
+	grid-template-columns: 1fr;
+}
+
+.ldl-item-card {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	padding: 24px 18px 18px;
+	border-radius: 16px;
+	border: 1px solid #e5e7eb;
+	background: #fff;
+	box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+}
+
+.ldl-item-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 64px;
+	height: 72px;
+	margin: 0 auto 16px;
+	border-radius: 16px;
+	background: #eff6ff;
+}
+
+.ldl-item-icon-label {
+	font-size: 20px;
+	font-weight: 600;
+}
+
+/* type-specific accents */
+.ldl-type-pdf .ldl-item-icon {
+	background: #fee2e2;
+}
+
+.ldl-type-doc .ldl-item-icon {
+	background: #dbeafe;
+}
+
+.ldl-type-xls .ldl-item-icon {
+	background: #dcfce7;
+}
+
+.ldl-type-video .ldl-item-icon {
+	background: #fef3c7;
+}
+
+.ldl-type-audio .ldl-item-icon {
+	background: #ede9fe;
+}
+
+.ldl-item-body {
+	text-align: center;
+}
+
+.ldl-item-title {
+	font-size: 14px;
+	margin: 0 0 6px;
+	font-weight: 500;
+}
+
+.ldl-item-meta {
+	font-size: 12px;
+	color: #6b7280;
+	margin: 0 0 12px;
+}
+
+.ldl-item-meta span + span::before {
+	content: '•';
+	margin: 0 4px;
+}
+
+.ldl-item-footer {
+	text-align: center;
+}
+
+.ldl-download-btn {
+	display: inline-block;
+	padding: 6px 16px;
+	border-radius: 999px;
+	background: #0ea5e9;
+	color: #fff;
+	font-size: 13px;
+	text-decoration: none;
+}
+
+.ldl-download-btn:hover {
+	background: #0284c7;
+}
+
+.ldl-pagination {
+	margin-top: 24px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 12px;
+	font-size: 13px;
+}
+
+.ldl-pagination button {
+	padding: 5px 12px;
+	border-radius: 999px;
+	border: 1px solid #d1d5db;
+	background: #fff;
+	cursor: pointer;
+}
+
+.ldl-pagination button:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+/* End CSS */

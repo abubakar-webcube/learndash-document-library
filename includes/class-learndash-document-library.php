@@ -114,6 +114,16 @@ class LearnDash_Document_Library
 		require_once LEARNDASH_DOCUMENT_LIBRARY_DIR . 'includes/class-learndash-document-library-i18n.php';
 
 		/**
+		 * This file is responsible for register blocks
+		 */
+		require_once LEARNDASH_DOCUMENT_LIBRARY_DIR . 'includes/block-registration.php';
+
+		/**
+		 * This is resposible for API's
+		 */
+		require_once LEARNDASH_DOCUMENT_LIBRARY_DIR . 'includes/rest-api.php';
+
+		/**
 		 * The class responsible for defining all license handling actions that occur in the admin area.
 		 */
 		require_once LEARNDASH_DOCUMENT_LIBRARY_DIR . 'includes/class-learndash-document-library-license-handler.php';
