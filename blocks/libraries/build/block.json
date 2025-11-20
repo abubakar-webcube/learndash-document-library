@@ -5,7 +5,7 @@
   "title": "LearnDash Document Libraries",
   "category": "widgets",
   "icon": "book",
-  "description": "Display LearnDash document libraries with various layout options",
+  "description": "Display LearnDash document libraries with flexible layouts, filters, and Tailwind-driven UI.",
   "keywords": [
     "learndash",
     "documents",
@@ -56,7 +56,7 @@
     ]
   },
   "editorScript": "file:./index.js",
-  "editorStyle": "file:./index.css",
+  "viewScript": "file:./view.js",
   "style": "file:./style-index.css",
-  "viewScript": "file:./view.js"
+  "editorStyle": "file:./index.css"
 }

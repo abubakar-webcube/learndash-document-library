@@ -1,0 +1,10 @@
+﻿@import "./style.css";
+
+/* Editor-only helpers */
+.wp-block-learndash-document-libraries {
+  position: relative;
+}
+
+.wp-block-learndash-document-libraries .ldl-app {
+  border-radius: 1rem;
+}

@@ -1,13 +1,18 @@
 {
-  "apiVersion": 2,
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
   "name": "learndash/document-libraries",
-  "title": "Document Libraries",
+  "title": "LearnDash Document Libraries",
   "category": "widgets",
-  "icon": "media-document",
-  "description": "Show LearnDash Document Libraries.",
-  "supports": {
-    "html": false
-  },
+  "icon": "book",
+  "description": "Display LearnDash document libraries with flexible layouts, filters, and Tailwind-driven UI.",
+  "keywords": [
+    "learndash",
+    "documents",
+    "library",
+    "files"
+  ],
+  "textdomain": "learndash-document-library",
   "attributes": {
     "exclude": {
       "type": "array",
@@ -27,13 +32,31 @@
     },
     "layout": {
       "type": "string",
-      "default": "list"
+      "default": "list",
+      "enum": [
+        "list",
+        "grid",
+        "folder"
+      ]
     },
     "search": {
       "type": "boolean",
       "default": true
+    },
+    "nested": {
+      "type": "boolean",
+      "default": false
     }
   },
-  "editorScript": "learndash-document-libraries-editor-script",
-  "viewScript": "ldl-document-library-frontend"
+  "supports": {
+    "html": false,
+    "align": [
+      "wide",
+      "full"
+    ]
+  },
+  "editorScript": "file:./index.js",
+  "viewScript": "file:./view.js",
+  "style": "file:./style-index.css",
+  "editorStyle": "file:./index.css"
 }

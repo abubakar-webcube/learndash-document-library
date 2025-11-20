@@ -1,7 +1,7 @@
 <?php
-if ( ! defined( 'ABSPATH' ) ) {
-    exit; // Exit if accessed directly
-}
+// if ( ! defined( 'ABSPATH' ) ) {
+//     exit; // Exit if accessed directly
+// }
 
 /**
  * Register the LearnDash Document Libraries block
@@ -9,31 +9,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 function ldl_register_libraries_block() {
     // Block build folder (jahan block.json pada hai)
-    $block_path = trailingslashit( LEARNDASH_DOCUMENT_LIBRARY_DIR ) . 'blocks/libraries/build';
+    $block_path = LEARNDASH_DOCUMENT_LIBRARY_DIR . 'blocks/libraries/build';
 
     // Debug: Check if path exists
     if ( ! file_exists( $block_path . '/block.json' ) ) {
         error_log( 'LDL Block Error: Build folder or block.json not found at ' . $block_path );
         return;
     }
-
-    /**
-     * Yahan hum FRONTEND React bundle register kar rahe hain
-     * 
-     * IMPORTANT:
-     * LEARNDASH_DOCUMENT_LIBRARY_URL . 'assets/react-app/app.bundle.js'
-     * ko apne React build ke actual path se replace karo.
-     * Example:
-     *   frontend/dist/assets/index.js
-     *   react-app/build/static/js/main.js
-     */
-    wp_register_script(
-        'ldl-document-library-frontend', // handle
-        LEARNDASH_DOCUMENT_LIBRARY_URL . 'assets/react-app/app.bundle.js', // <-- apna path lagao
-        array(), // dependencies agar koi nahi to empty
-        '1.0.0',
-        true
-    );
 
     // Gutenberg block register
     register_block_type(
@@ -109,7 +91,7 @@ add_action( 'enqueue_block_editor_assets', 'ldl_enqueue_block_editor_assets' );
  */
 function ldl_render_libraries_block( $attributes, $content = '', $block = null ) {
     // React bundle sirf jab block use ho raha ho
-    wp_enqueue_script( 'ldl-document-library-frontend' );
+    wp_enqueue_script( 'learndash-document-libraries-view-script' );
     // Shortcode waale defaults yahan copy kiye
     $defaults = array(
         'exclude'    => array(),

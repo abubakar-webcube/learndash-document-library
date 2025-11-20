@@ -1,13 +1,13 @@
-// src/App.jsx
+﻿// src/App.jsx
 import { useState } from "react";
 import { SearchField } from "./components/SearchField";
 import { ShowCountSelect } from "./components/ShowCountSelect";
 import { ViewModeSwitcher } from "./components/ViewModeSwitcher";
 import { Breadcrumbs } from "./components/Breadcrumbs";
-import documents from "./data/documents.json";
+import defaultDocuments from "./data/documents.json";
 
-// 10 folders like the FileBird demo
-const FOLDERS = [
+// Demo folders similar to the FileBird example
+const DEFAULT_FOLDERS = [
   { id: 1, name: "Folder 1" },
   { id: 2, name: "Folder 2" },
   { id: 3, name: "Folder 3" },
@@ -20,7 +20,7 @@ const FOLDERS = [
   { id: 10, name: "Folder 10" }
 ];
 
-// file-type → icon style
+// File-type badge + icon style mapping
 const FILE_TYPE_META = {
   pdf: { label: "PDF", bg: "bg-red-100", color: "text-red-500" },
   docx: { label: "W", bg: "bg-blue-100", color: "text-blue-500" },
@@ -87,15 +87,41 @@ function sortDocuments(a, b, field, direction) {
   return (av - bv) * dir;
 }
 
-function App() {
-  const [searchInput, setSearchInput] = useState("");
-  const [search, setSearch] = useState(""); // applied search (icon click)
-  const [perPage, setPerPage] = useState(10); // pagination
-  const [view, setView] = useState("list"); // "grid" | "list" | "folder"
-  const [selectedFolderId, setSelectedFolderId] = useState(null); // filter
+function normalizeDocuments(documents) {
+  if (Array.isArray(documents) && documents.length) {
+    return documents;
+  }
+  return defaultDocuments;
+}
 
-  const [sortField, setSortField] = useState("lastModified"); // "file" | "size" | "type" | "lastModified"
-  const [sortDirection, setSortDirection] = useState("desc"); // "asc" | "desc"
+function normalizeFolders(folders) {
+  if (Array.isArray(folders) && folders.length) {
+    return folders;
+  }
+  return DEFAULT_FOLDERS;
+}
+
+function App({
+  documents,
+  folders,
+  initialView = "list",
+  initialPerPage = 10,
+  enableSearch = true,
+  initialSearchTerm = "",
+  className = "",
+  showDebugState = false
+}) {
+  const documentList = normalizeDocuments(documents);
+  const folderList = normalizeFolders(folders);
+
+  const [searchInput, setSearchInput] = useState(initialSearchTerm);
+  const [search, setSearch] = useState(initialSearchTerm.trim());
+  const [perPage, setPerPage] = useState(initialPerPage);
+  const [view, setView] = useState(initialView);
+  const [selectedFolderId, setSelectedFolderId] = useState(null);
+
+  const [sortField, setSortField] = useState("lastModified");
+  const [sortDirection, setSortDirection] = useState("desc");
 
   const handleSearch = (term) => {
     setSearch(term.trim());
@@ -108,39 +134,38 @@ function App() {
     setSortField(field);
   };
 
-  // folders with document counts
-  const foldersWithCounts = FOLDERS.map((folder) => ({
+  const foldersWithCounts = folderList.map((folder) => ({
     ...folder,
-    count: documents.filter((doc) => doc.folderId === folder.id).length
+    count: documentList.filter((doc) => doc.folderId === folder.id).length
   }));
 
-  // map for folder name display
-  const folderNameById = Object.fromEntries(
-    FOLDERS.map((f) => [f.id, f.name])
-  );
+  const folderNameById = Object.fromEntries(folderList.map((f) => [f.id, f.name]));
+  const effectiveSearch = enableSearch ? search : "";
 
-  // Filter + sort + paginate documents
-  const filteredDocuments = documents.filter((doc) => {
+  const filteredDocuments = documentList.filter((doc) => {
     if (selectedFolderId && doc.folderId !== selectedFolderId) return false;
-    if (!search) return true;
-    return doc.title.toLowerCase().includes(search.toLowerCase());
+    if (!effectiveSearch) return true;
+    return doc.title.toLowerCase().includes(effectiveSearch.toLowerCase());
   });
 
   const sortedDocuments = [...filteredDocuments].sort((a, b) =>
     sortDocuments(a, b, sortField, sortDirection)
   );
 
-  const paginatedDocuments = sortedDocuments.slice(0, perPage);
+  const paginatedDocuments = perPage
+    ? sortedDocuments.slice(0, perPage)
+    : sortedDocuments;
 
   const currentFolderName = selectedFolderId
     ? folderNameById[selectedFolderId] || "All documents"
     : "All documents";
 
-  // Folder + List view same layout (table-style list)
-  const isListLikeView = view === "list" || view === "folder";
+  const wrapperClasses = ["ldl-app bg-gray-100 py-10", className]
+    .filter(Boolean)
+    .join(" ");
 
   return (
-    <main className="min-h-screen bg-gray-100 py-10">
+    <div className={wrapperClasses}>
       <div className="mx-auto max-w-6xl space-y-6 px-4">
         {/* Page title + breadcrumbs */}
         <header className="space-y-2">
@@ -154,12 +179,18 @@ function App() {
         </header>
 
         {/* Filters row */}
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <SearchField
-            value={searchInput}
-            onChange={setSearchInput}
-            onSearch={handleSearch}
-          />
+        <div
+          className={`flex flex-col gap-3 md:flex-row md:items-center ${
+            enableSearch ? "md:justify-between" : "md:justify-end"
+          }`}
+        >
+          {enableSearch && (
+            <SearchField
+              value={searchInput}
+              onChange={setSearchInput}
+              onSearch={handleSearch}
+            />
+          )}
 
           <div className="flex items-center gap-4">
             <ShowCountSelect value={perPage} onChange={setPerPage} />
@@ -174,27 +205,29 @@ function App() {
           onSelect={setSelectedFolderId}
         />
 
-        {/* Debug box (just for understanding state) */}
-        <section className="rounded-lg border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-700">
-          <p className="mb-2 font-medium text-gray-800">
-            Current filter state (applied):
-          </p>
-          <pre className="overflow-x-auto rounded bg-gray-50 p-3 text-xs">
-            {JSON.stringify(
-              {
-                search,
-                selectedFolderId,
-                perPage,
-                view,
-                sortField,
-                sortDirection,
-                visibleDocuments: paginatedDocuments.length
-              },
-              null,
-              2
-            )}
-          </pre>
-        </section>
+        {/* Debug box (optional) */}
+        {showDebugState && (
+          <section className="rounded-lg border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-700">
+            <p className="mb-2 font-medium text-gray-800">
+              Current filter state (applied):
+            </p>
+            <pre className="overflow-x-auto rounded bg-gray-50 p-3 text-xs">
+              {JSON.stringify(
+                {
+                  search: effectiveSearch,
+                  selectedFolderId,
+                  perPage,
+                  view,
+                  sortField,
+                  sortDirection,
+                  visibleDocuments: paginatedDocuments.length
+                },
+                null,
+                2
+              )}
+            </pre>
+          </section>
+        )}
 
         {/* Main content area: GRID vs LIST/FOLDER */}
         {view === "grid" ? (
@@ -212,15 +245,15 @@ function App() {
           />
         )}
       </div>
-    </main>
+    </div>
   );
 }
 
 export default App;
 
-//
-// ───────────────── Helper components ─────────────────
-//
+// -----------------------------------------------------------------------------
+// Helper components
+// -----------------------------------------------------------------------------
 
 function FolderFilterRow({ folders, selectedFolderId, onSelect }) {
   return (
@@ -232,23 +265,26 @@ function FolderFilterRow({ folders, selectedFolderId, onSelect }) {
             key={folder.id}
             type="button"
             onClick={() => onSelect(isActive ? null : folder.id)}
-            className={`flex flex-1 flex-grow flex-[190px] min-w-[120px] items-center justify-between rounded-lg px-3 py-2 text-xs cursor-pointer md:text-sm ${isActive
-              ? "bg-[#eceef0] text-gray-700 border border-blue-500"
-              : "bg-[#eceef0] hover:bg-[#eeeeee] text-gray-700 border border-[#dfdfdf]"
-              }`}
+            className={`flex flex-1 flex-grow flex-[190px] min-w-[120px] items-center justify-between rounded-lg px-3 py-2 text-xs cursor-pointer md:text-sm ${
+              isActive
+                ? "bg-[#eceef0] text-gray-700 border border-blue-500"
+                : "bg-[#eceef0] hover:bg-[#eeeeee] text-gray-700 border border-[#dfdfdf]"
+            }`}
           >
             <span className="inline-flex items-center gap-2">
               <span className="inline-flex h-5 w-5 items-center justify-center rounded text-black">
                 <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4Z">
-                  </path>
+                  <path d="M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4Z"></path>
                 </svg>
               </span>
               <span className="font-normal">{folder.name}</span>
             </span>
             <span
-              className={`ml-3 inline-flex h-6 min-w-[2rem] items-center justify-center rounded-full px-2 text-xs ${isActive ? "bg-gray-100 text-gray-600" : "bg-gray-100 text-gray-600"
-                }`}
+              className={`ml-3 inline-flex h-6 min-w-[2rem] items-center justify-center rounded-full px-2 text-xs ${
+                isActive
+                  ? "bg-gray-100 text-gray-600"
+                  : "bg-gray-100 text-gray-600"
+              }`}
             >
               {folder.count}
             </span>
@@ -259,7 +295,6 @@ function FolderFilterRow({ folders, selectedFolderId, onSelect }) {
   );
 }
 
-// LIST / FOLDER view (design closer to screenshot)
 function DocumentListView({
   documents,
   folderNameById,
@@ -272,20 +307,23 @@ function DocumentListView({
 
   const SortHeader = ({ label, fieldKey, alignRight = false }) => {
     const active = sortField === fieldKey;
-    const arrowClasses = `h-3 w-3 transition-transform ${sortDirection === "desc" ? "rotate-180" : ""
-      }`;
+    const arrowClasses = `h-3 w-3 transition-transform ${
+      sortDirection === "desc" ? "rotate-180" : ""
+    }`;
 
     return (
       <button
         type="button"
         onClick={() => onSortChange(fieldKey)}
-        className={`group inline-flex items-center gap-1 text-xs font-medium ${active ? "text-gray-800" : "text-gray-500"
-          } ${alignRight ? "justify-end w-full" : ""}`}
+        className={`group inline-flex items-center gap-1 text-xs font-medium ${
+          active ? "text-gray-800" : "text-gray-500"
+        } ${alignRight ? "justify-end w-full" : ""}`}
       >
         <span>{label}</span>
         <span
-          className={`flex items-center ${active ? "opacity-100 text-gray-600" : "opacity-40 group-hover:opacity-80"
-            }`}
+          className={`flex items-center ${
+            active ? "opacity-100 text-gray-600" : "opacity-40 group-hover:opacity-80"
+          }`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -382,7 +420,6 @@ function DocumentListView({
   );
 }
 
-// GRID view (card style)
 function DocumentGridView({ documents, folderNameById }) {
   return (
     <section className="space-y-3">
