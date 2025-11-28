@@ -77,12 +77,12 @@ class LearnDash_Document_Library_CPT {
             'taxonomies'         => array( 'ldl_library', 'ldl_tag' ),
         );
 
-        $settings = get_option('ldl_general_settings');
-        $enable_categories_filter = !empty($settings['enable_categories_filter']);
-        if($enable_categories_filter){
+        // $settings = get_option('ldl_general_settings');
+        // $enable_categories_filter = !empty($settings['enable_categories_filter']);
+        // if($enable_categories_filter){
             $args['taxonomies'][] = 'category';
-            $args['taxonomies'][] = 'post_tag';
-        }
+            // $args['taxonomies'][] = 'post_tag';
+        // }
     
         register_post_type( 'ldl-document', $args );
     }

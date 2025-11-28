@@ -601,7 +601,7 @@ class LearnDash_Document_Library_Metabox
 		$enable_categories_filter = !empty($settings['enable_categories_filter']);
 		$enable_categories_restriction = !empty($settings['enable_categories_restriction']);
 		wp_nonce_field( 'ldl_save_related_terms', 'ldl_related_terms_nonce' );
-		if($enable_categories_filter){
+		// if($enable_categories_filter){
         ?>
         <div class="form-field term-ldl_libraries-wrap">
             <label for="ldl_libraries"><?php esc_html_e('Select Libraries', 'learndash-document-library'); ?></label>
@@ -707,7 +707,7 @@ class LearnDash_Document_Library_Metabox
 				});
 			});
 		</script>
-        <?php }
+        <?php // }
     }
 
     /**
@@ -718,7 +718,7 @@ class LearnDash_Document_Library_Metabox
 		$settings = get_option('ldl_general_settings');
 		$enable_categories_filter = !empty($settings['enable_categories_filter']);
 		$enable_categories_restriction = !empty($settings['enable_categories_restriction']);
-		if($enable_categories_filter){
+		// if($enable_categories_filter){
 		$related_terms = [];
 		if ( isset( $term->term_id ) ) {
 			$related_terms = get_term_meta( $term->term_id, 'ldl_related_terms', true );
@@ -830,7 +830,7 @@ class LearnDash_Document_Library_Metabox
 				});
 			});
 		</script>
-        <?php }
+        <?php // }
     }
 
     /**
@@ -925,28 +925,6 @@ class LearnDash_Document_Library_Metabox
 				}
 			}
 		}
-		// if ( isset($_POST['ldl_libraries']) && !empty($_POST['ldl_libraries']) ) {
-		// 	$document_ids = array_map('intval', (array) $_POST['ldl_libraries']);
-		// 	$term_id = (int) $term_id;
-		// 	// Get all post IDs currently associated with this term
-		// 	$currently_tagged_posts = get_objects_in_term($term_id, 'category');
-		// 	// Remove the term from posts that are no longer selected
-		// 	$posts_to_remove = array_diff($currently_tagged_posts, $document_ids);
-		// 	foreach ($posts_to_remove as $post_id) {
-		// 		wp_remove_object_terms($post_id, $term_id, 'category');
-		// 	}
-		// 	// Safely reassign the term to selected documents
-		// 	foreach ($document_ids as $post_id) {
-		// 		wp_set_object_terms($post_id, $term_id, 'category', true); // Append to existing
-		// 	}
-		// } else {
-		// 	// No documents selected — remove the term from all currently tagged posts
-		// 	$term_id = (int) $term_id;
-		// 	$currently_tagged_posts = get_objects_in_term($term_id, 'category');
-		// 	foreach ($currently_tagged_posts as $post_id) {
-		// 		wp_remove_object_terms($post_id, $term_id, 'category');
-		// 	}
-		// }
 		// Save password and user roles if restriction enabled
 		// Save password
 		if (isset($_POST['library_password'])) {
@@ -1073,13 +1051,13 @@ class LearnDash_Document_Library_Metabox
 	public function add_category_term_columns($columns)
 	{
 		$settings = get_option('ldl_general_settings');
-        $enable_categories_filter = !empty($settings['enable_categories_filter']);
+        // $enable_categories_filter = !empty($settings['enable_categories_filter']);
         $enable_categories_restriction = !empty($settings['enable_categories_restriction']);
 		// Insert the new column after the 'name' column
 		$new_columns = array();
 		foreach ($columns as $key => $value) {
 			$new_columns[$key] = $value;
-			if ($enable_categories_filter && $key === 'name') {
+			if ($key === 'name') {
 				$new_columns['category_id'] = __('Category ID', 'learndash-document-library');
 				if($enable_categories_restriction) {
 					$new_columns['password'] = __('Password', 'learndash-document-library');

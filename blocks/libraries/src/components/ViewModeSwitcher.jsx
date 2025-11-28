@@ -82,6 +82,24 @@ export function ViewModeSwitcher({ mode, onChange }) {
         </svg>
         {/* <span className="hidden md:inline">Folder</span> */}
       </button>
+
+      <button
+        type="button"
+        onClick={() => onChange("favorites")}
+        className={`${baseBtn} ${mode === "favorites" ? active : inactive}`}
+      >
+        {/* heart icon */}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path d="M12 21s-6.5-3.88-9-8.25C1 10.18 1 7 3.5 5.5 6 4 8 5 12 8c4-3 6-4 8.5-2.5C23 7 23 10.18 21 12.75 18.5 17.12 12 21 12 21z" />
+        </svg>
+      </button>
     </div>
   );
 }

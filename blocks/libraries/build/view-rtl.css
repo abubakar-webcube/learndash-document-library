@@ -16,15 +16,3 @@
     opacity: 1 !important;
     pointer-events: all !important;
 }
-/*!********************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./src/editor.css ***!
-  \********************************************************************************************************************************************************************/
-/* Editor-only helpers */
-.wp-block-learndash-document-libraries {
-  position: relative;
-}
-
-.wp-block-learndash-document-libraries .ldl-app {
-  border-radius: 1rem;
-}
-

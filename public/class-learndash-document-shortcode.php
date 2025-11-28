@@ -477,18 +477,45 @@ class LearnDash_Document_Library_shortcode
      * Shortcode function to display libraries
      */
     public function ldl_libraries_shortcode($atts){
+        $general_settings = get_option('ldl_general_settings', []);
+        $visible_columns = isset( $general_settings['visible_list_columns'] ) && is_array( $general_settings['visible_list_columns'] )
+		? array_values( $general_settings['visible_list_columns'] )
+		: array( 'image', 'reference', 'title', 'published', 'modified', 'author', 'favorites', 'downloads', 'download' );
+        // Helper to normalize attribute into an array of values (handles string, comma list, or array)
+        $normalize_to_array = function($val) {
+            if (is_array($val)) {
+                return $val;
+            }
+            if ($val === null || $val === '') {
+                return [];
+            }
+            if (is_string($val)) {
+                // Split comma separated string, trim whitespace, remove empty parts
+                return preg_split('/\s*,\s*/', trim($val), -1, PREG_SPLIT_NO_EMPTY);
+            }
+            // fallback: cast to array
+            return (array) $val;
+        };
+        $exclude_raw    = $normalize_to_array($atts['exclude'] ?? []);
+        $libraries_raw  = $normalize_to_array($atts['libraries'] ?? []);
+        $categories_raw = $normalize_to_array($atts['categories'] ?? []);
+	    $current_user_id = get_current_user_id();
         $props = [
-            'exclude'    => array_values( array_filter( array_map( 'intval', $atts['exclude'] ?? [] ) ) ),
+            'exclude'    => array_values( array_filter( array_map( 'intval', $exclude_raw ) ) ),
             'limit'      => isset($atts['limit']) ? (int) $atts['limit'] : 9,
-            'libraries'  => array_values( array_filter( array_map( 'intval', $atts['libraries'] ?? [] ) ) ),
-            'categories' => array_values( array_filter( array_map( 'intval', $atts['categories'] ?? [] ) ) ),
-            'layout'     => in_array( $atts['layout'] ?? 'list', ['list','grid','folder'], true ) ? $atts['layout'] : 'list',
-            'search'     => ! empty( $atts['search'] ),
-            'nested'     => ! empty( $atts['nested'] ),
+            'libraries'  => array_values( array_filter( array_map( 'intval', $libraries_raw ) ) ),
+            'categories' => array_values( array_filter( array_map( 'intval', $categories_raw ) ) ),
+            'layout'     => isset($atts['layout']) && in_array( $atts['layout'] ?? 'list', ['list','grid','folder'], true ) ? $atts['layout'] : 'list',
+            'search'     => isset($atts['search']) ? filter_var( $atts['search'], FILTER_VALIDATE_BOOLEAN ) : true,
+            'restUrl'    => esc_url_raw( rest_url( 'ldl/v1' ) ),
+            'restNonce'  => wp_create_nonce( 'wp_rest' ),
+		    'visibleColumns' => $visible_columns,
+		    'currentUserId'  => $current_user_id,
         ];
         $handle = 'learndash-document-libraries-view-script'; // auto-generated from block.json viewScript
         if ( wp_script_is( $handle, 'registered' ) ) {
             wp_enqueue_script( $handle );
+            wp_localize_script( $handle, 'ldl_settings', $general_settings );
         }
         wp_enqueue_style( 'learndash-document-libraries-style' ); // from block.json "style"
         $json      = wp_json_encode( $props, JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_QUOT|JSON_HEX_APOS );
@@ -497,93 +524,6 @@ class LearnDash_Document_Library_shortcode
         // In render_callback (block) and in shortcode callback:
         return '<div class="ldl-frontend" data-ldl-root data-props="' . esc_attr( wp_json_encode( $props ) ) . '"></div>';
     }
-    // public function ldl_libraries_shortcode($atts){
-    //     $general_settings = get_option('ldl_general_settings');
-    //     $is_enabled_categories_filter = isset($general_settings['enable_categories_filter']) && $general_settings['enable_categories_filter'] == 1;
-    //     if (isset($general_settings['default_libraries_layout'])) {
-    //         $view = $general_settings['default_libraries_layout'];
-    //     } else {
-    //         $view = 'list';
-    //     }
-    //     $atts = shortcode_atts([
-    //         'exclude' => [],
-    //         'limit' => 9,
-    //         'libraries' => [],
-    //         'categories' => [],
-    //         'layout' => $view,
-    //         'search' => 'true',
-    //         'nested' => 'false',
-    //     ], $atts, 'ldl_libraries');
-    //     $atts['exclude'] = !empty($atts['exclude']) ? explode(',', $atts['exclude']) : [];
-    //     if($is_enabled_categories_filter){
-    //         if(! empty( $atts['libraries'] ) && ! empty( array_filter( (array) $atts['libraries'] ) )){
-    //             return '<div class="ldl-libraries-error">' . esc_html__('Please use the categories attribute.', 'learndash-document-library') . '</div>';
-    //         }
-    //         $atts['categories'] = !empty($atts['categories']) ? explode(',', $atts['categories']) : [];
-    //         $atts['libraries'] = [];
-    //         $category_terms = [];
-    //         foreach($atts['categories'] as $cat){
-    //             $get_related_terms = get_term_meta($cat, 'ldl_related_terms', true);
-    //             $category_terms = array_merge($category_terms, is_array($get_related_terms) ? $get_related_terms : []);
-    //             // $atts['cLibraries'] = $get_related_terms;
-    //             // if(!empty($get_related_terms) && is_array($get_related_terms)){
-    //             //     foreach($get_related_terms as $related_term){
-    //             //         if(!in_array($related_term, $atts['libraries'])){
-    //             //             $atts['libraries'][] = $related_term;
-    //             //         }
-    //             //     }
-    //             // }
-    //         }
-    //     } else {
-    //         if(! empty( $atts['categories'] ) && ! empty( array_filter( (array) $atts['categories'] ) )){
-    //             return '<div class="ldl-libraries-error">' . esc_html__('Please use the libraries attribute.', 'learndash-document-library') . '</div>';
-    //         }
-    //         $atts['libraries'] = !empty($atts['libraries']) ? explode(',', $atts['libraries']) : [];
-    //         $atts['categories'] = [];
-    //     }
-    //     $atts['limit'] = (int) $atts['limit'];
-    //     $atts['search'] = filter_var($atts['search'], FILTER_VALIDATE_BOOLEAN);
-    //     $atts['layout'] = in_array($atts['layout'], ['list', 'grid', 'folder']) ? $atts['layout'] : 'list';
-    //     // ob_start();
-    //     // include plugin_dir_path(__FILE__) . 'partials/'.$atts['layout'].'-view.php';
-    //     // return ob_get_clean();
-    //     ob_start();
-    //     // Always include the correct view partial for the current layout
-    //     if (in_array($atts['layout'], ['list', 'grid', 'folder'])) {
-    //         if (!empty($atts['categories'])) {
-    //             foreach ($atts['categories'] as $category_id) {
-    //                 $atts['current_category'] = array_map('absint', explode(',', $category_id));
-    //                 $term = get_term($category_id, 'category');
-    //                 echo '<div class="ldl-libraries">';
-    //                 if (!is_wp_error($term)) {
-    //                     echo '<h2 class="library-title">' . esc_html($term->name) . '</h2>';
-    //                 }
-    //                 include plugin_dir_path(__FILE__) . 'partials/' . $atts['layout'] . '-view.php';
-    //                 echo '</div>';
-    //             }
-    //         } elseif (!empty($atts['libraries'])) {
-    //             foreach ($atts['libraries'] as $library_id) {
-    //                 $atts['current_library'] = array_map('absint', explode(',', $library_id));
-    //                 $term = get_term($library_id, 'ldl_library');
-    //                 echo '<div class="ldl-libraries">';
-    //                 if (!is_wp_error($term)) {
-    //                     echo '<h2 class="library-title">' . esc_html($term->name) . '</h2>';
-    //                 }
-    //                 include plugin_dir_path(__FILE__) . 'partials/' . $atts['layout'] . '-view.php';
-    //                 echo '</div>';
-    //             }
-    //         } else {
-    //             echo '<div class="ldl-libraries">';
-    //             include plugin_dir_path(__FILE__) . 'partials/' . $atts['layout'] . '-view.php';
-    //             echo '</div>';
-    //         }
-    //     } else {
-    //         echo '<div class="ldl-libraries">';
-    //         include plugin_dir_path(__FILE__) . 'partials/' . $atts['layout'] . '-view.php';
-    //         echo '</div>';
-    //     }
-    //     return ob_get_clean();
-    // }
 
     /**
      * Function to switch view

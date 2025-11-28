@@ -42,10 +42,6 @@
     "search": {
       "type": "boolean",
       "default": true
-    },
-    "nested": {
-      "type": "boolean",
-      "default": false
     }
   },
   "supports": {

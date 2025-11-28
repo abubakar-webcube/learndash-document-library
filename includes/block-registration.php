@@ -90,8 +90,11 @@ add_action( 'enqueue_block_editor_assets', 'ldl_enqueue_block_editor_assets' );
  * Yahan hum React app ka ROOT div + props bhej rahe hain
  */
 function ldl_render_libraries_block( $attributes, $content = '', $block = null ) {
+	$general_settings = get_option( 'ldl_general_settings', array() );
     // React bundle sirf jab block use ho raha ho
     wp_enqueue_script( 'learndash-document-libraries-view-script' );
+	wp_enqueue_style( 'learndash-document-libraries-style' );
+    wp_localize_script( 'learndash-document-libraries-view-script', 'ldl_settings', $general_settings );
     // Shortcode waale defaults yahan copy kiye
     $defaults = array(
         'exclude'    => array(),
@@ -103,6 +106,10 @@ function ldl_render_libraries_block( $attributes, $content = '', $block = null )
     );
     // Block ke $attributes + defaults merge
     $atts = shortcode_atts( $defaults, $attributes, 'ldl_libraries' );
+	$visible_columns = isset( $general_settings['visible_list_columns'] ) && is_array( $general_settings['visible_list_columns'] )
+		? array_values( $general_settings['visible_list_columns'] )
+		: array( 'image', 'reference', 'title', 'published', 'modified', 'author', 'favorites', 'downloads', 'download' );
+	$current_user_id = get_current_user_id();
     // Types normalize karna (React ko clean data mile)
     $props = array(
         'exclude'    => array_map( 'intval', (array) $atts['exclude'] ),
@@ -110,6 +117,11 @@ function ldl_render_libraries_block( $attributes, $content = '', $block = null )
         'libraries'  => array_map( 'intval', (array) $atts['libraries'] ),
         'categories' => array_map( 'intval', (array) $atts['categories'] ),
         'layout'     => sanitize_text_field( $atts['layout'] ),
+		// Base namespace so the app can hit /folders and /documents
+		'restUrl'    => esc_url_raw( rest_url( 'ldl/v1' ) ),
+		'restNonce'  => wp_create_nonce( 'wp_rest' ),
+		'visibleColumns' => $visible_columns,
+		'currentUserId'  => $current_user_id,
         // search: block se bool aa sakta hai, shortcode se string 'true'/'false'
         'search'     => (
             $atts['search'] === true

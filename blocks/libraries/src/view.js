@@ -2,9 +2,6 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 
-const DEFAULT_LIMIT = 9;
-const DEFAULT_LAYOUT = "list";
-
 const parseProps = (node) => {
   const raw = node?.getAttribute("data-props");
   if (!raw) {
@@ -26,19 +23,26 @@ const mountApp = (node) => {
   }
 
   const props = parseProps(node);
-  const initialView = props.layout || DEFAULT_LAYOUT;
-  const initialPerPage = Number.isFinite(props.limit) ? props.limit : DEFAULT_LIMIT;
+  const initialView = props.layout || "list";
+  const initialPerPage = Number.isFinite(props.limit) ? props.limit : 9;
   const enableSearch = props.search !== false;
+  const visibleColumns = Array.isArray(props.visibleColumns) ? props.visibleColumns : [];
 
   const reactRoot = createRoot(node);
   reactRoot.render(
     <StrictMode>
       <App
-        documents={props.documents}
-        folders={props.folders}
         initialView={initialView}
         initialPerPage={initialPerPage}
         enableSearch={enableSearch}
+        currentUserId={props.currentUserId || null}
+        libraries={props.libraries || []}
+        categories={props.categories || []}
+        exclude={props.exclude || []}
+        initialFolders={props.folders || []}
+        restUrl={props.restUrl || ""}
+        restNonce={props.restNonce || ""}
+        visibleColumns={visibleColumns}
       />
     </StrictMode>
   );

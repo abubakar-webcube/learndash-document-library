@@ -90,6 +90,9 @@ const Edit = ({ attributes, setAttributes }) => {
   const libraryOptions = Array.isArray(blockData.libraries) ? blockData.libraries : [];
   const categoryOptions = Array.isArray(blockData.categories) ? blockData.categories : [];
   const categoriesDisabled = !blockData.isCategoriesFilterEnabled;
+  const apiRoot = typeof window !== "undefined" && window.wpApiSettings?.root ? window.wpApiSettings.root.replace(/\/$/, "") : "";
+  const restUrl = blockData.restUrl || (apiRoot ? `${apiRoot}/ldl/v1` : "");
+  const restNonce = blockData.restNonce || (typeof window !== "undefined" ? window.wpApiSettings?.nonce || "" : "");
 
   const blockProps = useBlockProps({ className: "ldl-block-preview" });
 
@@ -156,10 +159,15 @@ const Edit = ({ attributes, setAttributes }) => {
 
       <App
         key={`preview-${layout}-${limit}-${search}`}
-        documents={documents}
         initialView={layout}
         initialPerPage={limit}
         enableSearch={search}
+        libraries={libraries}
+        categories={categories}
+        exclude={exclude}
+        visibleColumns={blockData.visible_list_columns || []}
+        restUrl={restUrl}
+        restNonce={restNonce}
       />
     </div>
   );
