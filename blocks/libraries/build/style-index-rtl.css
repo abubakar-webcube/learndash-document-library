@@ -581,6 +581,12 @@ video {
 .top-full {
   top: 100%;
 }
+.-right-1 {
+  left: -0.25rem;
+}
+.-top-1 {
+  top: -0.25rem;
+}
 .z-50 {
   z-index: 50;
 }
@@ -1136,6 +1142,10 @@ video {
 .text-white {
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity, 1));
+}
+.text-yellow-500 {
+  --tw-text-opacity: 1;
+  color: rgb(234 179 8 / var(--tw-text-opacity, 1));
 }
 .underline {
   text-decoration-line: underline;

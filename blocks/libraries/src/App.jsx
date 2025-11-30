@@ -1,4 +1,4 @@
-﻿// src/App.jsx
+// src/App.jsx - Updated with Access Control
 import { useEffect, useMemo, useState } from "react";
 import { SearchField } from "./components/SearchField";
 import { TagSelect } from "./components/TagSelect";
@@ -7,6 +7,7 @@ import { ViewModeSwitcher } from "./components/ViewModeSwitcher";
 import { Breadcrumbs } from "./components/Breadcrumbs";
 import { Pagination } from "./components/Pagination";
 import FilePreviewModal from "./components/FilePreviewModal";
+import { checkAccess, checkDocumentAccess, hasRestrictions, isUnlocked } from "./utils/AccessControl";
 
 const DEFAULT_LAYOUT = "list";
 const DEFAULT_LIMIT = 9;
@@ -25,17 +26,6 @@ function getFileTypeMeta(type) {
   return FILE_TYPE_META[type] || { label: type?.toUpperCase() || "?", bg: "bg-gray-100", color: "text-gray-500" };
 }
 
-function sizeToBytes(sizeStr) {
-  if (!sizeStr) return 0;
-  const [numStr, unitRaw] = sizeStr.split(" ");
-  const num = parseFloat(numStr);
-  const unit = (unitRaw || "").toUpperCase();
-  if (unit.startsWith("KB")) return num * 1024;
-  if (unit.startsWith("MB")) return num * 1024 * 1024;
-  if (unit.startsWith("GB")) return num * 1024 * 1024 * 1024;
-  return num;
-}
-
 function formatDate(dateStr) {
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
@@ -52,6 +42,7 @@ function sortDocuments(a, b, field, direction) {
   if (field === "author") return av(a.author) < av(b.author) ? -1 * dir : av(a.author) > av(b.author) ? 1 * dir : 0;
   return 0;
 }
+
 function App({
   initialView = DEFAULT_LAYOUT,
   initialPerPage = DEFAULT_LIMIT,
@@ -73,7 +64,7 @@ function App({
   const [currentPage, setCurrentPage] = useState(1);
   const [view, setView] = useState(initialView || DEFAULT_LAYOUT);
   const [lastNonFavoritesView, setLastNonFavoritesView] = useState(initialView || DEFAULT_LAYOUT);
-  const [folderStack, setFolderStack] = useState([]); // For drill-down
+  const [folderStack, setFolderStack] = useState([]);
   const [sortField, setSortField] = useState("modified");
   const [sortDirection, setSortDirection] = useState("desc");
   const [documents, setDocuments] = useState([]);
@@ -84,6 +75,8 @@ function App({
   const [loadingDocuments, setLoadingDocuments] = useState(false);
   const [error, setError] = useState("");
   const [favoriteIds, setFavoriteIds] = useState(new Set());
+  const [folderRestrictions, setFolderRestrictions] = useState({});
+
   const columns = useMemo(
     () =>
       Array.isArray(visibleColumns) && visibleColumns.length
@@ -97,8 +90,6 @@ function App({
   const normalizedExclude = useMemo(() => (Array.isArray(exclude) ? exclude : []), [exclude]);
 
   const currentFolderId = folderStack.length ? folderStack[folderStack.length - 1] : null;
-  const isFavoritesView = view === "favorites";
-  const shouldShowDocuments = isFavoritesView || Boolean(currentFolderId);
   const apiBase = useMemo(() => {
     if (!restUrl) return "";
     try {
@@ -115,7 +106,8 @@ function App({
 
   const getTopLevelFolders = () => folders.filter((f) => f.parentId === null);
   const getChildrenOf = (parentId) => folders.filter((f) => f.parentId === parentId);
-  // Fetch folders once (or when API props change)
+
+  // Fetch folders and check restrictions
   useEffect(() => {
     if (!apiBase) {
       setError("API base URL is missing.");
@@ -132,17 +124,22 @@ function App({
     if (normalizedExclude.length) folderParams.append("exclude", normalizedExclude.join(","));
 
     const foldersUrl = folderParams.toString() ? `${apiBase}/folders?${folderParams.toString()}` : `${apiBase}/folders`;
-    // Debug: log request
-    // eslint-disable-next-line no-console
-    console.debug("LDL fetch folders", { url: foldersUrl, headers: apiHeaders });
 
     fetch(foldersUrl, { headers: apiHeaders })
       .then((res) => (res.ok ? res.json() : Promise.reject(res)))
-      .then((data) => {
+      .then(async (data) => {
         if (cancelled) return;
-        // eslint-disable-next-line no-console
-        console.debug("LDL folders response", { count: Array.isArray(data) ? data.length : 0, data });
-        setFolders(Array.isArray(data) ? data : []);
+        const folderList = Array.isArray(data) ? data : [];
+        setFolders(folderList);
+
+        // Check restrictions for each folder
+        const restrictionsMap = {};
+        for (const folder of folderList) {
+          const isRestricted = await hasRestrictions(folder.id, 'ldl_library', apiBase, restNonce);
+          const unlockedInSession = isUnlocked(folder.id, 'ldl_library');
+          restrictionsMap[folder.id] = isRestricted && !unlockedInSession;
+        }
+        setFolderRestrictions(restrictionsMap);
       })
       .catch((err) => {
         if (cancelled) return;
@@ -157,7 +154,8 @@ function App({
       cancelled = true;
     };
   }, [apiBase, apiHeaders]);
-  // Fetch tags once (or when API props change)
+
+  // Fetch tags
   useEffect(() => {
     if (!apiBase) return;
     let cancelled = false;
@@ -168,14 +166,12 @@ function App({
     return () => { cancelled = true; };
   }, [apiBase, apiHeaders]);
 
-
-  // Fetch documents when folder changes (or API props change)
+  // Fetch documents
   useEffect(() => {
     let cancelled = false;
     setLoadingDocuments(true);
     setError("");
 
-    // If no API configured, stop
     if (!apiBase) {
       setLoadingDocuments(false);
       setError("API base URL is missing.");
@@ -189,16 +185,11 @@ function App({
     if (normalizedExclude.length) params.append("exclude", normalizedExclude.join(","));
     if (selectedTags.length) params.append("tags", selectedTags.join(","));
     const url = params.toString() ? `${apiBase}/documents?${params.toString()}` : `${apiBase}/documents`;
-    // Debug: log request
-    // eslint-disable-next-line no-console
-    console.debug("LDL fetch documents", { url, headers: apiHeaders });
 
     fetch(url, { headers: apiHeaders })
       .then((res) => (res.ok ? res.json() : Promise.reject(res)))
       .then((data) => {
         if (cancelled) return;
-        // eslint-disable-next-line no-console
-        console.debug("LDL documents response", { count: Array.isArray(data) ? data.length : 0, data });
         setDocuments(Array.isArray(data) ? data : []);
         const favSet = new Set(
           Array.isArray(data) ? data.filter((d) => d.isFavorite).map((d) => d.id) : []
@@ -230,6 +221,14 @@ function App({
 
   const handleFavoriteToggle = async (docId) => {
     if (!apiBase || !restNonce || !currentUserId) return;
+    
+    // Check document access first
+    const doc = documents.find(d => d.id === docId);
+    if (doc) {
+      const accessResult = await checkDocumentAccess(doc, apiBase, restNonce);
+      if (!accessResult.allowed) return;
+    }
+
     const isFav = favoriteIds.has(docId);
     const body = { doc_id: docId, user_id: currentUserId };
     try {
@@ -242,7 +241,6 @@ function App({
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error(`Favorite toggle failed: ${res.status}`);
-      const data = await res.json();
       setFavoriteIds((prev) => {
         const next = new Set(prev);
         if (isFav) {
@@ -281,7 +279,6 @@ function App({
     return Number.isNaN(num) ? [] : [num];
   };
 
-  // folders with counts
   const foldersWithCounts = useMemo(
     () =>
       folders.map((folder) => ({
@@ -293,31 +290,23 @@ function App({
     [folders, documents]
   );
 
-  // folder name map
   const folderNameById = useMemo(
     () => Object.fromEntries(folders.map((f) => [Number(f.id), f.name])),
     [folders]
   );
 
-  // Filtered documents
-  const filteredDocuments = shouldShowDocuments
-    ? documents.filter((doc) => {
-        const isFav = favoriteIds.has(doc.id);
-        const inViewScope = isFavoritesView
-          ? isFav
-          : currentFolderId
-            ? getDocFolderIds(doc).includes(Number(currentFolderId))
-            : false;
-        if (!inViewScope) return false;
-        if (!search) return true;
-        return doc.title.toLowerCase().includes(search.toLowerCase());
-      })
-    : [];
+  const filteredDocuments = documents.filter((doc) => {
+    const isFav = favoriteIds.has(doc.id);
+    const inViewScope = view === "favorites" ? isFav : true;
+    if (!inViewScope) return false;
+    if (view !== "favorites" && currentFolderId && !getDocFolderIds(doc).includes(Number(currentFolderId))) return false;
+    if (!search) return true;
+    return doc.title.toLowerCase().includes(search.toLowerCase());
+  });
 
   const sortedDocuments = [...filteredDocuments].sort((a, b) => sortDocuments(a, b, sortField, sortDirection));
   const paginatedDocuments = sortedDocuments.slice((currentPage - 1) * perPage, (currentPage - 1) * perPage + perPage);
 
-  // Visible folders for FolderFilterRow
   const getVisibleFolders = () => {
     if (view === "favorites") return [];
     if (!currentFolderId) return getTopLevelFolders();
@@ -335,8 +324,14 @@ function App({
     });
   };
 
-  // Handlers
-  const openPreview = (file) => setPreviewFile(file);
+  const openPreview = async (file) => {
+    // Check document access
+    const accessResult = await checkDocumentAccess(file, apiBase, restNonce);
+    if (accessResult.allowed) {
+      setPreviewFile(file);
+    }
+  };
+  
   const closePreview = () => setPreviewFile(null);
   const handleSearch = (term) => setSearch(term.trim());
   const handleSortChange = (field) => {
@@ -344,52 +339,39 @@ function App({
     setSortField(field);
   };
 
-  const handleFolderClick = (folderId) => {
+  const handleFolderClick = async (folderId) => {
+    // Check access to folder
+    const accessResult = await checkAccess(folderId, 'ldl_library', 'open', apiBase, restNonce);
+    if (!accessResult.allowed) return;
+
     const children = getChildrenOf(folderId);
     if (children.length > 0) {
-      setFolderStack((prev) => [...prev, folderId]); // drill down
+      setFolderStack((prev) => [...prev, folderId]);
       setCurrentPage(1);
     } else {
-      setFolderStack([folderId]); // select leaf folder
+      setFolderStack([folderId]);
       setCurrentPage(1);
     }
+    
+    // Update restriction status after unlock
+    setFolderRestrictions(prev => ({
+      ...prev,
+      [folderId]: false
+    }));
   };
 
   return (
     <main className="min-h-screen bg-gray-100 py-10">
       <div className="mx-auto max-w-6xl space-y-6 px-4">
         <header className="space-y-2">
-          {/* <h1 className="text-2xl font-semibold text-gray-900 mb-[30px]">LearnDash Document Library Demo</h1> */}
-          {/* <Breadcrumbs
-            rootLabel="Document Library Demo"
-            folders={folders}
-            selectedFolderId={currentFolderId}
-            onFolderSelect={(id) => {
-              if (!id) {
-                setFolderStack([]); // clicked root
-              } else {
-                // Drill down
-                setFolderStack((prev) => {
-                  const index = prev.indexOf(id);
-                  if (index !== -1) {
-                    return prev;
-                  } else {
-                    return [...prev, id];
-                  }
-                });
-              }
-              setCurrentPage(1);
-            }}
-          /> */}
           <Breadcrumbs
             rootLabel="LearnDash Document Library"
             folders={folders}
             selectedFolderId={currentFolderId}
             onFolderSelect={(id) => {
               if (!id) {
-                setFolderStack([]); // clicked root
+                setFolderStack([]);
               } else {
-                // Build the complete path to this folder
                 let path = [];
                 let current = folders.find(f => f.id === id);
                 while (current) {
@@ -421,19 +403,29 @@ function App({
           </div>
         </div>
 
-        {/* Folder pills */}
-        <FolderFilterRow
-          folders={getVisibleFolders().map((f) => ({
-            ...f,
-            count: foldersWithCounts.find((x) => x.id === f.id)?.count || 0,
-          }))}
-          selectedFolderId={currentFolderId}
-          onSelect={handleFolderClick}
-          disabled={isFavoritesView}
-        />
-
-        {shouldShowDocuments && (
+        {!currentFolderId && view !== "favorites" ? (
+          <FolderFilterRow
+            folders={getVisibleFolders().map((f) => ({
+              ...f,
+              count: foldersWithCounts.find((x) => x.id === f.id)?.count || 0,
+              isRestricted: folderRestrictions[f.id] || false,
+            }))}
+            selectedFolderId={currentFolderId}
+            onSelect={handleFolderClick}
+          />
+        ) : (
           <>
+            <FolderFilterRow
+              folders={getVisibleFolders().map((f) => ({
+                ...f,
+                count: foldersWithCounts.find((x) => x.id === f.id)?.count || 0,
+                isRestricted: folderRestrictions[f.id] || false,
+              }))}
+              selectedFolderId={currentFolderId}
+              onSelect={handleFolderClick}
+              disabled={view === "favorites"}
+            />
+
             {(loadingFolders || loadingDocuments) && (
               <div className="text-sm text-gray-600">Loading...</div>
             )}
@@ -441,7 +433,6 @@ function App({
               <div className="text-sm text-red-600">{error}</div>
             )}
 
-            {/* Documents */}
             {view === "grid" ? (
               <>
                 <DocumentGridView
@@ -453,6 +444,7 @@ function App({
                   onFavoriteToggle={handleFavoriteToggle}
                   restBase={apiBase}
                   restNonce={restNonce}
+                  folderRestrictions={folderRestrictions}
                 />
                 <Pagination
                   totalItems={sortedDocuments.length}
@@ -475,6 +467,7 @@ function App({
                   onFavoriteToggle={handleFavoriteToggle}
                   restBase={apiBase}
                   restNonce={restNonce}
+                  folderRestrictions={folderRestrictions}
                 />
                 <Pagination
                   totalItems={sortedDocuments.length}
@@ -495,7 +488,7 @@ function App({
 
 export default App;
 
-// Folder pills
+// Folder pills with lock icons
 function FolderFilterRow({ folders, selectedFolderId, onSelect, disabled = false }) {
   return (
     <div className="flex flex-wrap gap-[14px] mb-4">
@@ -514,9 +507,15 @@ function FolderFilterRow({ folders, selectedFolderId, onSelect, disabled = false
           >
             <span className="inline-flex items-center gap-2">
               <span className="inline-flex h-5 w-5 items-center justify-center rounded text-black">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4Z"></path>
-                </svg>
+                {folder.isRestricted ? (
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4Z"></path>
+                  </svg>
+                )}
               </span>
               <span className="font-normal">{folder.name}</span>
             </span>
@@ -530,7 +529,11 @@ function FolderFilterRow({ folders, selectedFolderId, onSelect, disabled = false
   );
 }
 
-// LIST / FOLDER view (design closer to screenshot)
+// Continue in next artifact...
+
+// Document List and Grid Views with Access Control
+// Add these to the bottom of App.jsx
+
 function DocumentListView({
   documents,
   folderNameById,
@@ -543,6 +546,7 @@ function DocumentListView({
   onFavoriteToggle,
   restBase,
   restNonce,
+  folderRestrictions,
 }) {
   const colWidths = {
     image: "minmax(0,1.2fr)",
@@ -559,32 +563,52 @@ function DocumentListView({
 
   const SortHeader = ({ label, fieldKey, alignRight = false }) => {
     const active = sortField === fieldKey;
-    const arrowClasses = `h-3 w-3 transition-transform ${sortDirection === "desc" ? "rotate-180" : ""
-      }`;
+    const arrowClasses = `h-3 w-3 transition-transform ${sortDirection === "desc" ? "rotate-180" : ""}`;
 
     return (
       <button
         type="button"
         onClick={() => onSortChange(fieldKey)}
-        className={`group inline-flex items-center gap-1 text-xs font-medium cursor-pointer ${active ? "text-gray-800" : "text-gray-500"
-          } ${alignRight ? "justify-end w-full" : ""}`}
+        className={`group inline-flex items-center gap-1 text-xs font-medium cursor-pointer ${active ? "text-gray-800" : "text-gray-500"} ${alignRight ? "justify-end w-full" : ""}`}
       >
         <span>{label}</span>
-        <span
-          className={`flex items-center ${active ? "opacity-100 text-gray-600" : "opacity-40 group-hover:opacity-80"
-            }`}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className={arrowClasses}
-          >
+        <span className={`flex items-center ${active ? "opacity-100 text-gray-600" : "opacity-40 group-hover:opacity-80"}`}>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={arrowClasses}>
             <path d="M5.23 12.79a.75.75 0 001.06 0L10 9.06l3.71 3.73a.75.75 0 001.06-1.06l-4.24-4.25a.75.75 0 00-1.06 0L5.23 11.73a.75.75 0 000 1.06z" />
           </svg>
         </span>
       </button>
     );
+  };
+
+  const isDocumentRestricted = (doc) => {
+    const folderIds = typeof doc.folderIds === 'object' ? doc.folderIds : [doc.folderId];
+    return folderIds.some(fid => folderRestrictions[fid]);
+  };
+
+  const handleDownload = async (doc) => {
+    const accessResult = await checkDocumentAccess(doc, restBase, restNonce);
+    if (!accessResult.allowed) return;
+
+    // Increment download count
+    if (restBase) {
+      const headers = { "Content-Type": "application/json" };
+      if (restNonce) headers["X-WP-Nonce"] = restNonce;
+      fetch(`${restBase}/download`, {
+        method: "POST",
+        headers,
+        credentials: "include",
+        body: JSON.stringify({ doc_id: doc.id }),
+      }).catch((err) => console.error("LDL: download increment failed", err));
+    }
+
+    // Trigger download
+    const link = document.createElement('a');
+    link.href = doc.url;
+    link.download = doc.title;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -612,6 +636,8 @@ function DocumentListView({
           <div className="space-y-2 pt-1">
             {documents.map((doc) => {
               const meta = getFileTypeMeta(doc.type);
+              const isRestricted = isDocumentRestricted(doc);
+              
               return (
                 <div
                   key={doc.id}
@@ -619,10 +645,28 @@ function DocumentListView({
                   style={{ gridTemplateColumns: columnsTemplate }}
                 >
                   {columns.includes("image") && (
-                    <div className="text-xs text-gray-700">
-                      {doc.image ? <img src={doc.image} alt={doc.title} className="h-10 w-10 object-cover rounded" /> : (
-                        <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${meta.bg} ${meta.color} text-xs font-semibold`}>
+                    <div className="text-xs text-gray-700 relative">
+                      {doc.image ? (
+                        <>
+                          <img src={doc.image} alt={doc.title} className="h-10 w-10 object-cover rounded" />
+                          {isRestricted && (
+                            <span className="absolute -top-1 -right-1 text-yellow-500">
+                              <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+                              </svg>
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${meta.bg} ${meta.color} text-xs font-semibold relative`}>
                           {meta.label}
+                          {isRestricted && (
+                            <span className="absolute -top-1 -right-1 text-yellow-500">
+                              <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+                              </svg>
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>
@@ -631,8 +675,13 @@ function DocumentListView({
                   {columns.includes("title") && (
                     <div className="flex items-center gap-3">
                       <div className="flex flex-col">
-                        <a onClick={() => openPreview(doc)} className="cursor-pointer font-normal text-xs text-blue-600 hover:underline">
+                        <a onClick={() => openPreview(doc)} className="cursor-pointer font-normal text-xs text-blue-600 hover:underline inline-flex items-center gap-1">
                           {doc.title}
+                          {isRestricted && (
+                            <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3 text-yellow-500">
+                              <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+                            </svg>
+                          )}
                         </a>
                         <span className="text-xs text-gray-500">
                           {folderNameById[doc.folderId] || "Root"}
@@ -658,26 +707,12 @@ function DocumentListView({
                   {columns.includes("downloads") && <div className="text-xs text-gray-700">{doc.downloads ?? 0}</div>}
                   {columns.includes("download") && (
                     <div className="flex justify-end">
-                      <a
-                        href={doc.url}
-                        download={doc.title}
-                        onClick={(e) => {
-                          // increment download count via REST, then allow download
-                          if (restBase) {
-                            const headers = { "Content-Type": "application/json" };
-                            if (restNonce) headers["X-WP-Nonce"] = restNonce;
-                            fetch(`${restBase}/download`, {
-                              method: "POST",
-                              headers,
-                              credentials: "include",
-                              body: JSON.stringify({ doc_id: doc.id }),
-                            }).catch((err) => console.error("LDL: download increment failed", err));
-                          }
-                        }}
+                      <button
+                        onClick={() => handleDownload(doc)}
                         className="inline-flex items-center justify-center rounded-full bg-blue-500 px-4 py-1.5 text-xs font-medium text-white hover:bg-blue-600 cursor-pointer transition"
                       >
                         Download
-                      </a>
+                      </button>
                     </div>
                   )}
                 </div>
@@ -690,8 +725,35 @@ function DocumentListView({
   );
 }
 
-// GRID view (card style) with same fields/actions as list
-function DocumentGridView({ documents, folderNameById, openPreview, columns, favoriteIds, onFavoriteToggle, restBase, restNonce }) {
+function DocumentGridView({ documents, folderNameById, openPreview, columns, favoriteIds, onFavoriteToggle, restBase, restNonce, folderRestrictions }) {
+  const isDocumentRestricted = (doc) => {
+    const folderIds = typeof doc.folderIds === 'object' ? doc.folderIds : [doc.folderId];
+    return folderIds.some(fid => folderRestrictions[fid]);
+  };
+
+  const handleDownload = async (doc) => {
+    const accessResult = await checkDocumentAccess(doc, restBase, restNonce);
+    if (!accessResult.allowed) return;
+
+    if (restBase) {
+      const headers = { "Content-Type": "application/json" };
+      if (restNonce) headers["X-WP-Nonce"] = restNonce;
+      fetch(`${restBase}/download`, {
+        method: "POST",
+        headers,
+        credentials: "include",
+        body: JSON.stringify({ doc_id: doc.id }),
+      }).catch((err) => console.error("LDL: download increment failed", err));
+    }
+
+    const link = document.createElement('a');
+    link.href = doc.url;
+    link.download = doc.title;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <section className="space-y-3">
       <h2 className="text-sm font-semibold text-gray-700">
@@ -700,15 +762,22 @@ function DocumentGridView({ documents, folderNameById, openPreview, columns, fav
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {documents.map((doc) => {
           const meta = getFileTypeMeta(doc.type);
-          const folderLabel =
-            folderNameById[Number(doc.folderId)] ||
-            (Array.isArray(doc.folderIds) ? folderNameById[Number(doc.folderIds[0])] : undefined) ||
-            "Root";
+          const folderLabel = folderNameById[Number(doc.folderId)] || "Root";
+          const isRestricted = isDocumentRestricted(doc);
+          
           return (
             <div
               key={doc.id}
-              className="flex flex-col items-center rounded-2xl bg-white p-4 py-5 border border-[#dfdfdf] hover:border-blue-500"
+              className="flex flex-col items-center rounded-2xl bg-white p-4 py-5 border border-[#dfdfdf] hover:border-blue-500 relative"
             >
+              {isRestricted && (
+                <span className="absolute top-2 right-2 text-yellow-500">
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+                  </svg>
+                </span>
+              )}
+              
               {columns.includes("image") && (
                 <div
                   className={`mb-[20px] mt-[10px] flex h-14 w-14 items-center justify-center rounded-2xl ${meta.bg} ${meta.color} text-xs font-semibold`}
@@ -716,7 +785,6 @@ function DocumentGridView({ documents, folderNameById, openPreview, columns, fav
                   {meta.label}
                 </div>
               )}
-              {columns.includes("reference") && <div className="text-xs text-gray-700">{doc.reference ?? doc.id}</div>}
               {columns.includes("title") && (
                 <div className="flex-1 space-y-1 text-sm text-center">
                   <a onClick={() => openPreview(doc)} className="font-medium text-gray-800 hover:text-blue-600 hover:underline text-center cursor-pointer">{doc.title}</a>
@@ -725,11 +793,9 @@ function DocumentGridView({ documents, folderNameById, openPreview, columns, fav
                   </p>
                 </div>
               )}
-              {columns.includes("published") && <div className="text-xs text-gray-700">{formatDate(doc.published || doc.lastModified)}</div>}
-              {columns.includes("modified") && <div className="text-xs text-gray-700">{formatDate(doc.lastModified)}</div>}
-              {columns.includes("author") && <div className="text-xs text-gray-700">{doc.author || "Unknown"}</div>}
-              {columns.includes("favorites") && (
-                <div className="flex items-center gap-2 text-xs text-gray-700">
+              
+              <div className="mt-2 flex items-center gap-3">
+                {columns.includes("favorites") && (
                   <button
                     type="button"
                     onClick={() => onFavoriteToggle(doc.id)}
@@ -738,27 +804,16 @@ function DocumentGridView({ documents, folderNameById, openPreview, columns, fav
                   >
                     {favoriteIds.has(doc.id) ? "\u2665" : "\u2661"}
                   </button>
-                </div>
-              )}
-              {columns.includes("downloads") && <div className="text-xs text-gray-700">{doc.downloads ?? 0}</div>}
+                )}
+                {columns.includes("downloads") && <span className="text-xs text-gray-700">{doc.downloads ?? 0} downloads</span>}
+              </div>
+              
               {columns.includes("download") && (
-                <a
-                  href={doc.url} download={doc.title}
-                  onClick={() => {
-                    if (restBase) {
-                      const headers = { "Content-Type": "application/json" };
-                      if (restNonce) headers["X-WP-Nonce"] = restNonce;
-                      fetch(`${restBase}/download`, {
-                        method: "POST",
-                        headers,
-                        credentials: "include",
-                        body: JSON.stringify({ doc_id: doc.id }),
-                      }).catch((err) => console.error("LDL: download increment failed", err));
-                    }
-                  }}
+                <button
+                  onClick={() => handleDownload(doc)}
                   className="mt-4 inline-flex items-center justify-center rounded-full bg-blue-500 px-4 py-1.5 text-xs font-medium text-white hover:bg-blue-600 text-center cursor-pointer transition">
                   Download
-                </a>
+                </button>
               )}
             </div>
           );
