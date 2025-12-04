@@ -1,7 +1,7 @@
 <?php
-// if ( ! defined( 'ABSPATH' ) ) {
-//     exit; // Exit if accessed directly
-// }
+if ( ! defined( 'ABSPATH' ) ) {
+    exit; // Exit if accessed directly
+}
 
 /**
  * Register the LearnDash Document Libraries block
@@ -101,7 +101,7 @@ function ldl_render_libraries_block( $attributes, $content = '', $block = null )
         'limit'      => 9,
         'libraries'  => array(),
         'categories' => array(),
-        'layout'     => 'list',   // ya $view agar tum upar se la rahe ho
+        'layout'     => $general_settings['default_libraries_layout'] ?? 'list',   // ya $view agar tum upar se la rahe ho
         'search'     => 'true',   // shortcode me string thi, block se bool bhi aa sakta hai
     );
     // Block ke $attributes + defaults merge

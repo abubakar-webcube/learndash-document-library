@@ -195,9 +195,8 @@ export async function checkAccess(termId, taxonomy, action, restBase, restNonce)
 
 /**
  * Check access to a document by checking all its folder/library associations
- * Uses "ANY" logic: User needs access to AT LEAST ONE library containing the document
  */
-export async function checkDocumentAccess(document, restBase, restNonce, currentFolderId = null) {
+export async function checkDocumentAccess(document, restBase, restNonce) {
   // Get all folder IDs this document belongs to
   const getFolderIds = (doc) => {
     const raw = doc.folderIds ?? doc.folder_id ?? doc.folderId ?? doc.folder?.id;
@@ -216,32 +215,15 @@ export async function checkDocumentAccess(document, restBase, restNonce, current
     return { allowed: true, reason: '' };
   }
 
-  // Strategy: If viewing from specific folder context, only check that folder
-  // Otherwise check if user has access to ANY of the folders
-  if (currentFolderId && folderIds.includes(Number(currentFolderId))) {
-    // Context-aware: Only check the current folder
-    return await checkAccess(currentFolderId, 'ldl_library', 'view', restBase, restNonce);
-  }
-
-  // Check access to each folder - need access to AT LEAST ONE
-  let hasAccessToAny = false;
-  let lastDenialReason = { allowed: false, reason: 'no_access' };
-
+  // Check access to each folder
   for (const folderId of folderIds) {
     const result = await checkAccess(folderId, 'ldl_library', 'view', restBase, restNonce);
-    if (result.allowed) {
-      hasAccessToAny = true;
-      break; // Found accessible folder, allow access
+    if (!result.allowed) {
+      return result; // Return first restriction encountered
     }
-    lastDenialReason = result; // Keep track of last denial for error message
   }
 
-  if (hasAccessToAny) {
-    return { allowed: true, reason: '' };
-  }
-
-  // User has no access to any folder containing this document
-  return lastDenialReason;
+  return { allowed: true, reason: '' };
 }
 
 /**

@@ -140,66 +140,66 @@ function ldl_register_rest_routes() {
 		)
 	);
 
-	// Check access endpoint
-	register_rest_route(
-		'ldl/v1',
-		'/check-access',
-		array(
-			'methods'             => WP_REST_Server::CREATABLE,
-			'callback'            => 'ldl_rest_check_access',
-			'permission_callback' => '__return_true',
-			'args'                => array(
-				'term_id'   => array(
-					'required'          => true,
-					'sanitize_callback' => 'absint',
-				),
-				'taxonomy'  => array(
-					'required'          => true,
-					'sanitize_callback' => 'sanitize_text_field',
-				),
-				'action'    => array(
-					'required'          => true,
-					'sanitize_callback' => 'sanitize_text_field',
-				),
-			),
-		)
-	);
+	// // Check access endpoint
+	// register_rest_route(
+	// 	'ldl/v1',
+	// 	'/check-access',
+	// 	array(
+	// 		'methods'             => WP_REST_Server::CREATABLE,
+	// 		'callback'            => 'ldl_rest_check_access',
+	// 		'permission_callback' => '__return_true',
+	// 		'args'                => array(
+	// 			'term_id'   => array(
+	// 				'required'          => true,
+	// 				'sanitize_callback' => 'absint',
+	// 			),
+	// 			'taxonomy'  => array(
+	// 				'required'          => true,
+	// 				'sanitize_callback' => 'sanitize_text_field',
+	// 			),
+	// 			'action'    => array(
+	// 				'required'          => true,
+	// 				'sanitize_callback' => 'sanitize_text_field',
+	// 			),
+	// 		),
+	// 	)
+	// );
 
-	// Verify password endpoint
-	register_rest_route(
-		'ldl/v1',
-		'/verify-password',
-		array(
-			'methods'             => WP_REST_Server::CREATABLE,
-			'callback'            => 'ldl_rest_verify_password',
-			'permission_callback' => '__return_true',
-			'args'                => array(
-				'term_id'   => array(
-					'required'          => true,
-					'sanitize_callback' => 'absint',
-				),
-				'taxonomy'  => array(
-					'required'          => true,
-					'sanitize_callback' => 'sanitize_text_field',
-				),
-				'password'  => array(
-					'required'          => true,
-					'sanitize_callback' => 'sanitize_text_field',
-				),
-			),
-		)
-	);
+	// // Verify password endpoint
+	// register_rest_route(
+	// 	'ldl/v1',
+	// 	'/verify-password',
+	// 	array(
+	// 		'methods'             => WP_REST_Server::CREATABLE,
+	// 		'callback'            => 'ldl_rest_verify_password',
+	// 		'permission_callback' => '__return_true',
+	// 		'args'                => array(
+	// 			'term_id'   => array(
+	// 				'required'          => true,
+	// 				'sanitize_callback' => 'absint',
+	// 			),
+	// 			'taxonomy'  => array(
+	// 				'required'          => true,
+	// 				'sanitize_callback' => 'sanitize_text_field',
+	// 			),
+	// 			'password'  => array(
+	// 				'required'          => true,
+	// 				'sanitize_callback' => 'sanitize_text_field',
+	// 			),
+	// 		),
+	// 	)
+	// );
 
-	// Get current user roles endpoint
-	register_rest_route(
-		'ldl/v1',
-		'/user-roles',
-		array(
-			'methods'             => WP_REST_Server::READABLE,
-			'callback'            => 'ldl_rest_get_user_roles',
-			'permission_callback' => '__return_true',
-		)
-	);
+	// // Get current user roles endpoint
+	// register_rest_route(
+	// 	'ldl/v1',
+	// 	'/user-roles',
+	// 	array(
+	// 		'methods'             => WP_REST_Server::READABLE,
+	// 		'callback'            => 'ldl_rest_get_user_roles',
+	// 		'permission_callback' => '__return_true',
+	// 	)
+	// );
 }
 
 /**
@@ -771,49 +771,228 @@ function ldl_get_term_descendants( $term_id, $taxonomy ) {
 /**
  * Check if user has access to a term (library/category)
  */
+// function ldl_rest_check_access( WP_REST_Request $request ) {
+// 	$term_id  = absint( $request->get_param( 'term_id' ) );
+// 	$taxonomy = sanitize_text_field( $request->get_param( 'taxonomy' ) );
+// 	$action   = sanitize_text_field( $request->get_param( 'action' ) );
+// 	if ( ! $term_id || ! $taxonomy ) {
+// 		return new WP_Error( 'invalid_params', __( 'Invalid parameters.', 'learndash-document-library' ), array( 'status' => 400 ) );
+// 	}
+// 	// Get term
+// 	$term = get_term( $term_id, $taxonomy );
+// 	if ( is_wp_error( $term ) || ! $term ) {
+// 		return new WP_Error( 'invalid_term', __( 'Term not found.', 'learndash-document-library' ), array( 'status' => 404 ) );
+// 	}
+// 	// Check role restrictions first
+// 	$allowed_roles = get_term_meta( $term_id, 'library_user_roles', true );
+// 	$has_password  = get_term_meta( $term_id, 'library_password', true );
+// 	$response = array(
+// 		'allowed'        => true,
+// 		'needs_password' => false,
+// 		'reason'         => '',
+// 		'term_name'      => $term->name,
+// 	);
+// 	// If no restrictions, allow access
+// 	if ( empty( $allowed_roles ) && empty( $has_password ) ) {
+// 		return rest_ensure_response( $response );
+// 	}
+// 	// Check user roles
+// 	if ( ! empty( $allowed_roles ) && is_array( $allowed_roles ) ) {
+// 		$current_user = wp_get_current_user();
+// 		$user_roles   = (array) $current_user->roles;
+// 		// Check if user has any of the allowed roles
+// 		$has_role = ! empty( array_intersect( $allowed_roles, $user_roles ) );
+// 		if ( ! $has_role ) {
+// 			$response['allowed'] = false;
+// 			$response['reason']  = 'role';
+// 			return rest_ensure_response( $response );
+// 		}
+// 	}
+// 	// If role check passed, check password
+// 	if ( ! empty( $has_password ) ) {
+// 		$response['needs_password'] = true;
+// 		$response['allowed']        = false;
+// 		$response['reason']         = 'password';
+// 	}
+// 	return rest_ensure_response( $response );
+// }
+
+/**
+ * Verify password for a term
+ */
+// function ldl_rest_verify_password( WP_REST_Request $request ) {
+// 	$term_id  = absint( $request->get_param( 'term_id' ) );
+// 	$taxonomy = sanitize_text_field( $request->get_param( 'taxonomy' ) );
+// 	$password = sanitize_text_field( $request->get_param( 'password' ) );
+// 	if ( ! $term_id || ! $taxonomy || empty( $password ) ) {
+// 		return new WP_Error( 'invalid_params', __( 'Invalid parameters.', 'learndash-document-library' ), array( 'status' => 400 ) );
+// 	}
+// 	// Get stored password
+// 	$stored_password = get_term_meta( $term_id, 'library_password', true );
+// 	if ( empty( $stored_password ) ) {
+// 		return rest_ensure_response(
+// 			array(
+// 				'success' => true,
+// 				'message' => __( 'No password required.', 'learndash-document-library' ),
+// 			)
+// 		);
+// 	}
+// 	// Verify password
+// 	if ( $password === $stored_password ) {
+// 		return rest_ensure_response(
+// 			array(
+// 				'success' => true,
+// 				'message' => __( 'Access granted!', 'learndash-document-library' ),
+// 			)
+// 		);
+// 	}
+// 	return rest_ensure_response(
+// 		array(
+// 			'success' => false,
+// 			'message' => __( 'Incorrect password. Please try again in 30 seconds.', 'learndash-document-library' ),
+// 		)
+// 	);
+// }
+
+/**
+ * Get current user roles
+ */
+// function ldl_rest_get_user_roles() {
+// 	$current_user = wp_get_current_user();
+// 	$user_roles   = (array) $current_user->roles;
+// 	return rest_ensure_response(
+// 		array(
+// 			'user_id' => $current_user->ID,
+// 			'roles'   => $user_roles,
+// 		)
+// 	);
+// }
+
+
+/**
+ * Add these functions to rest-api.php after the existing routes registration
+ */
+
+// Add to ldl_register_rest_routes() function:
+function ldl_register_access_control_routes() {
+	// Check access endpoint
+	register_rest_route(
+		'ldl/v1',
+		'/check-access',
+		array(
+			'methods'             => WP_REST_Server::CREATABLE,
+			'callback'            => 'ldl_rest_check_access',
+			'permission_callback' => '__return_true',
+			'args'                => array(
+				'term_id'   => array(
+					'required'          => true,
+					'sanitize_callback' => 'absint',
+				),
+				'taxonomy'  => array(
+					'required'          => true,
+					'sanitize_callback' => 'sanitize_text_field',
+				),
+				'action'    => array(
+					'required'          => true,
+					'sanitize_callback' => 'sanitize_text_field',
+				),
+			),
+		)
+	);
+
+	// Verify password endpoint
+	register_rest_route(
+		'ldl/v1',
+		'/verify-password',
+		array(
+			'methods'             => WP_REST_Server::CREATABLE,
+			'callback'            => 'ldl_rest_verify_password',
+			'permission_callback' => '__return_true',
+			'args'                => array(
+				'term_id'   => array(
+					'required'          => true,
+					'sanitize_callback' => 'absint',
+				),
+				'taxonomy'  => array(
+					'required'          => true,
+					'sanitize_callback' => 'sanitize_text_field',
+				),
+				'password'  => array(
+					'required'          => true,
+					'sanitize_callback' => 'sanitize_text_field',
+				),
+			),
+		)
+	);
+
+	// Get current user roles endpoint
+	register_rest_route(
+		'ldl/v1',
+		'/user-roles',
+		array(
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => 'ldl_rest_get_user_roles',
+			'permission_callback' => '__return_true',
+		)
+	);
+}
+
+/**
+ * Check if user has access to a term (library/category)
+ */
 function ldl_rest_check_access( WP_REST_Request $request ) {
 	$term_id  = absint( $request->get_param( 'term_id' ) );
 	$taxonomy = sanitize_text_field( $request->get_param( 'taxonomy' ) );
 	$action   = sanitize_text_field( $request->get_param( 'action' ) );
+
 	if ( ! $term_id || ! $taxonomy ) {
 		return new WP_Error( 'invalid_params', __( 'Invalid parameters.', 'learndash-document-library' ), array( 'status' => 400 ) );
 	}
+
 	// Get term
 	$term = get_term( $term_id, $taxonomy );
 	if ( is_wp_error( $term ) || ! $term ) {
 		return new WP_Error( 'invalid_term', __( 'Term not found.', 'learndash-document-library' ), array( 'status' => 404 ) );
 	}
+
 	// Check role restrictions first
 	$allowed_roles = get_term_meta( $term_id, 'library_user_roles', true );
 	$has_password  = get_term_meta( $term_id, 'library_password', true );
+
 	$response = array(
 		'allowed'        => true,
 		'needs_password' => false,
 		'reason'         => '',
 		'term_name'      => $term->name,
 	);
+
 	// If no restrictions, allow access
 	if ( empty( $allowed_roles ) && empty( $has_password ) ) {
 		return rest_ensure_response( $response );
 	}
+
 	// Check user roles
 	if ( ! empty( $allowed_roles ) && is_array( $allowed_roles ) ) {
 		$current_user = wp_get_current_user();
 		$user_roles   = (array) $current_user->roles;
+
 		// Check if user has any of the allowed roles
 		$has_role = ! empty( array_intersect( $allowed_roles, $user_roles ) );
+
 		if ( ! $has_role ) {
 			$response['allowed'] = false;
 			$response['reason']  = 'role';
 			return rest_ensure_response( $response );
 		}
 	}
+
 	// If role check passed, check password
 	if ( ! empty( $has_password ) ) {
 		$response['needs_password'] = true;
 		$response['allowed']        = false;
 		$response['reason']         = 'password';
 	}
+
 	return rest_ensure_response( $response );
 }
 
@@ -824,11 +1003,14 @@ function ldl_rest_verify_password( WP_REST_Request $request ) {
 	$term_id  = absint( $request->get_param( 'term_id' ) );
 	$taxonomy = sanitize_text_field( $request->get_param( 'taxonomy' ) );
 	$password = sanitize_text_field( $request->get_param( 'password' ) );
+
 	if ( ! $term_id || ! $taxonomy || empty( $password ) ) {
 		return new WP_Error( 'invalid_params', __( 'Invalid parameters.', 'learndash-document-library' ), array( 'status' => 400 ) );
 	}
+
 	// Get stored password
 	$stored_password = get_term_meta( $term_id, 'library_password', true );
+
 	if ( empty( $stored_password ) ) {
 		return rest_ensure_response(
 			array(
@@ -837,6 +1019,7 @@ function ldl_rest_verify_password( WP_REST_Request $request ) {
 			)
 		);
 	}
+
 	// Verify password
 	if ( $password === $stored_password ) {
 		return rest_ensure_response(
@@ -846,6 +1029,7 @@ function ldl_rest_verify_password( WP_REST_Request $request ) {
 			)
 		);
 	}
+
 	return rest_ensure_response(
 		array(
 			'success' => false,
@@ -860,6 +1044,7 @@ function ldl_rest_verify_password( WP_REST_Request $request ) {
 function ldl_rest_get_user_roles() {
 	$current_user = wp_get_current_user();
 	$user_roles   = (array) $current_user->roles;
+
 	return rest_ensure_response(
 		array(
 			'user_id' => $current_user->ID,
@@ -867,3 +1052,6 @@ function ldl_rest_get_user_roles() {
 		)
 	);
 }
+
+// Call this in ldl_register_rest_routes()
+add_action( 'rest_api_init', 'ldl_register_access_control_routes' );

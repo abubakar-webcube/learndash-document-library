@@ -500,12 +500,14 @@ class LearnDash_Document_Library_shortcode
         $libraries_raw  = $normalize_to_array($atts['libraries'] ?? []);
         $categories_raw = $normalize_to_array($atts['categories'] ?? []);
 	    $current_user_id = get_current_user_id();
+        $allowed = ['list','grid','folder'];
         $props = [
             'exclude'    => array_values( array_filter( array_map( 'intval', $exclude_raw ) ) ),
             'limit'      => isset($atts['limit']) ? (int) $atts['limit'] : 9,
             'libraries'  => array_values( array_filter( array_map( 'intval', $libraries_raw ) ) ),
             'categories' => array_values( array_filter( array_map( 'intval', $categories_raw ) ) ),
-            'layout'     => isset($atts['layout']) && in_array( $atts['layout'] ?? 'list', ['list','grid','folder'], true ) ? $atts['layout'] : 'list',
+            // 'layout'     => isset($atts['layout']) && in_array( $atts['layout'] ?? 'list', ['list','grid','folder'], true ) ? $atts['layout'] : 'list',
+            'layout'     => in_array($atts['layout'] ?? '', $allowed, true) ? $atts['layout'] : ( in_array($general_settings['default_libraries_layout'] ?? '', $allowed, true) ? $general_settings['default_libraries_layout'] : 'list'),
             'search'     => isset($atts['search']) ? filter_var( $atts['search'], FILTER_VALIDATE_BOOLEAN ) : true,
             'restUrl'    => esc_url_raw( rest_url( 'ldl/v1' ) ),
             'restNonce'  => wp_create_nonce( 'wp_rest' ),

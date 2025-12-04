@@ -29808,6 +29808,295 @@ function FolderFilterRow({
 // Document List and Grid Views with Access Control
 // Add these to the bottom of App.jsx
 
+// function DocumentListView({
+//   documents,
+//   folderNameById,
+//   sortField,
+//   sortDirection,
+//   onSortChange,
+//   openPreview,
+//   columns,
+//   favoriteIds,
+//   onFavoriteToggle,
+//   restBase,
+//   restNonce,
+//   folderRestrictions,
+// }) {
+//   const colWidths = {
+//     image: "minmax(0,1.2fr)",
+//     reference: "minmax(0,1.2fr)",
+//     title: "minmax(0,2fr)",
+//     published: "minmax(0,1.2fr)",
+//     modified: "minmax(0,1.2fr)",
+//     author: "minmax(0,1fr)",
+//     favorites: "minmax(0,1fr)",
+//     downloads: "minmax(0,1fr)",
+//     download: "minmax(0,1fr)",
+//   };
+//   const columnsTemplate = columns.map((c) => colWidths[c] || "minmax(0,1fr)").join(" ");
+
+//   const SortHeader = ({ label, fieldKey, alignRight = false }) => {
+//     const active = sortField === fieldKey;
+//     const arrowClasses = `h-3 w-3 transition-transform ${sortDirection === "desc" ? "rotate-180" : ""}`;
+
+//     return (
+//       <button
+//         type="button"
+//         onClick={() => onSortChange(fieldKey)}
+//         className={`group inline-flex items-center gap-1 text-xs font-medium cursor-pointer ${active ? "text-gray-800" : "text-gray-500"} ${alignRight ? "justify-end w-full" : ""}`}
+//       >
+//         <span>{label}</span>
+//         <span className={`flex items-center ${active ? "opacity-100 text-gray-600" : "opacity-40 group-hover:opacity-80"}`}>
+//           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={arrowClasses}>
+//             <path d="M5.23 12.79a.75.75 0 001.06 0L10 9.06l3.71 3.73a.75.75 0 001.06-1.06l-4.24-4.25a.75.75 0 00-1.06 0L5.23 11.73a.75.75 0 000 1.06z" />
+//           </svg>
+//         </span>
+//       </button>
+//     );
+//   };
+
+//   const isDocumentRestricted = (doc) => {
+//     const folderIds = typeof doc.folderIds === 'object' ? doc.folderIds : [doc.folderId];
+//     return folderIds.some(fid => folderRestrictions[fid]);
+//   };
+
+//   const handleDownload = async (doc) => {
+//     const accessResult = await checkDocumentAccess(doc, restBase, restNonce);
+//     if (!accessResult.allowed) return;
+
+//     // Increment download count
+//     if (restBase) {
+//       const headers = { "Content-Type": "application/json" };
+//       if (restNonce) headers["X-WP-Nonce"] = restNonce;
+//       fetch(`${restBase}/download`, {
+//         method: "POST",
+//         headers,
+//         credentials: "include",
+//         body: JSON.stringify({ doc_id: doc.id }),
+//       }).catch((err) => console.error("LDL: download increment failed", err));
+//     }
+
+//     // Trigger download
+//     const link = document.createElement('a');
+//     link.href = doc.url;
+//     link.download = doc.title;
+//     document.body.appendChild(link);
+//     link.click();
+//     document.body.removeChild(link);
+//   };
+
+//   return (
+//     <>
+//       <section className="space-y-3">
+//         <h2 className="text-sm font-semibold text-gray-700">
+//           Documents ({documents.length})
+//         </h2>
+
+//         <div className="">
+//           {/* Header row */}
+//           <div className="grid mb-[6px] items-center rounded-xl bg-gray-50 px-4 py-2 border border-[#dfdfdf]" style={{ gridTemplateColumns: columnsTemplate }}>
+//             {columns.includes("image") && <div className="text-xs font-medium text-gray-600">Image</div>}
+//             {columns.includes("reference") && <div><SortHeader label="Reference" fieldKey="reference" /></div>}
+//             {columns.includes("title") && <div><SortHeader label="Title" fieldKey="title" /></div>}
+//             {columns.includes("published") && <div><SortHeader label="Published" fieldKey="published" /></div>}
+//             {columns.includes("modified") && <div><SortHeader label="Last Modified" fieldKey="modified" /></div>}
+//             {columns.includes("author") && <div><SortHeader label="Author" fieldKey="author" /></div>}
+//             {columns.includes("favorites") && <div className="text-xs font-medium text-gray-600">Favorites</div>}
+//             {columns.includes("downloads") && <div className="text-xs font-medium text-gray-600">Downloads</div>}
+//             {columns.includes("download") && <div className="text-right text-xs font-medium text-gray-500">Download</div>}
+//           </div>
+
+//           {/* Rows */}
+//           <div className="space-y-2 pt-1">
+//             {documents.map((doc) => {
+//               const meta = getFileTypeMeta(doc.type);
+//               const isRestricted = isDocumentRestricted(doc);
+
+//               return (
+//                 <div
+//                   key={doc.id}
+//                   className="grid items-center rounded-xl bg-white px-4 py-3 border border-[#dfdfdf] hover:border-blue-500"
+//                   style={{ gridTemplateColumns: columnsTemplate }}
+//                 >
+//                   {columns.includes("image") && (
+//                     <div className="text-xs text-gray-700 relative">
+//                       {doc.image ? (
+//                         <>
+//                           <img src={doc.image} alt={doc.title} className="h-10 w-10 object-cover rounded" />
+//                           {isRestricted && (
+//                             <span className="absolute -top-1 -right-1 text-yellow-500">
+//                               <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+//                                 <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+//                               </svg>
+//                             </span>
+//                           )}
+//                         </>
+//                       ) : (
+//                         <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${meta.bg} ${meta.color} text-xs font-semibold relative`}>
+//                           {meta.label}
+//                           {isRestricted && (
+//                             <span className="absolute -top-1 -right-1 text-yellow-500">
+//                               <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+//                                 <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+//                               </svg>
+//                             </span>
+//                           )}
+//                         </div>
+//                       )}
+//                     </div>
+//                   )}
+//                   {columns.includes("reference") && <div className="text-xs text-gray-700">{doc.reference ?? doc.id}</div>}
+//                   {columns.includes("title") && (
+//                     <div className="flex items-center gap-3">
+//                       <div className="flex flex-col">
+//                         <a onClick={() => openPreview(doc)} className="cursor-pointer font-normal text-xs text-blue-600 hover:underline inline-flex items-center gap-1">
+//                           {doc.title}
+//                           {isRestricted && (
+//                             <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3 text-yellow-500">
+//                               <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+//                             </svg>
+//                           )}
+//                         </a>
+//                         <span className="text-xs text-gray-500">
+//                           {folderNameById[doc.folderId] || "Root"}
+//                         </span>
+//                       </div>
+//                     </div>
+//                   )}
+//                   {columns.includes("published") && <div className="text-xs text-gray-700">{formatDate(doc.published || doc.lastModified)}</div>}
+//                   {columns.includes("modified") && <div className="text-xs text-gray-700">{formatDate(doc.lastModified)}</div>}
+//                   {columns.includes("author") && <div className="text-xs text-gray-700">{doc.author || "Unknown"}</div>}
+//                   {columns.includes("favorites") && (
+//                     <div className="flex items-center gap-2 text-xs text-gray-700">
+//                       <button
+//                         type="button"
+//                         onClick={() => onFavoriteToggle(doc.id)}
+//                         className="cursor-pointer text-red-500 text-[20px] leading-none"
+//                         aria-label="Toggle favorite"
+//                       >
+//                         {favoriteIds.has(doc.id) ? "\u2665" : "\u2661"}
+//                       </button>
+//                     </div>
+//                   )}
+//                   {columns.includes("downloads") && <div className="text-xs text-gray-700">{doc.downloads ?? 0}</div>}
+//                   {columns.includes("download") && (
+//                     <div className="flex justify-end">
+//                       <button
+//                         onClick={() => handleDownload(doc)}
+//                         className="inline-flex items-center justify-center rounded-full bg-blue-500 px-4 py-1.5 text-xs font-medium text-white hover:bg-blue-600 cursor-pointer transition"
+//                       >
+//                         Download
+//                       </button>
+//                     </div>
+//                   )}
+//                 </div>
+//               );
+//             })}
+//           </div>
+//         </div>
+//       </section>
+//     </>
+//   );
+// }
+
+// function DocumentGridView({ documents, folderNameById, openPreview, columns, favoriteIds, onFavoriteToggle, restBase, restNonce, folderRestrictions }) {
+//   const isDocumentRestricted = (doc) => {
+//     const folderIds = typeof doc.folderIds === 'object' ? doc.folderIds : [doc.folderId];
+//     return folderIds.some(fid => folderRestrictions[fid]);
+//   };
+
+//   const handleDownload = async (doc) => {
+//     const accessResult = await checkDocumentAccess(doc, restBase, restNonce);
+//     if (!accessResult.allowed) return;
+
+//     if (restBase) {
+//       const headers = { "Content-Type": "application/json" };
+//       if (restNonce) headers["X-WP-Nonce"] = restNonce;
+//       fetch(`${restBase}/download`, {
+//         method: "POST",
+//         headers,
+//         credentials: "include",
+//         body: JSON.stringify({ doc_id: doc.id }),
+//       }).catch((err) => console.error("LDL: download increment failed", err));
+//     }
+
+//     const link = document.createElement('a');
+//     link.href = doc.url;
+//     link.download = doc.title;
+//     document.body.appendChild(link);
+//     link.click();
+//     document.body.removeChild(link);
+//   };
+
+//   return (
+//     <section className="space-y-3">
+//       <h2 className="text-sm font-semibold text-gray-700">
+//         Documents ({documents.length})
+//       </h2>
+//       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+//         {documents.map((doc) => {
+//           const meta = getFileTypeMeta(doc.type);
+//           const folderLabel = folderNameById[Number(doc.folderId)] || "Root";
+//           const isRestricted = isDocumentRestricted(doc);
+
+//           return (
+//             <div
+//               key={doc.id}
+//               className="flex flex-col items-center rounded-2xl bg-white p-4 py-5 border border-[#dfdfdf] hover:border-blue-500 relative"
+//             >
+//               {isRestricted && (
+//                 <span className="absolute top-2 right-2 text-yellow-500">
+//                   <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+//                     <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+//                   </svg>
+//                 </span>
+//               )}
+
+//               {columns.includes("image") && (
+//                 <div
+//                   className={`mb-[20px] mt-[10px] flex h-14 w-14 items-center justify-center rounded-2xl ${meta.bg} ${meta.color} text-xs font-semibold`}
+//                 >
+//                   {meta.label}
+//                 </div>
+//               )}
+//               {columns.includes("title") && (
+//                 <div className="flex-1 space-y-1 text-sm text-center">
+//                   <a onClick={() => openPreview(doc)} className="font-medium text-gray-800 hover:text-blue-600 hover:underline text-center cursor-pointer">{doc.title}</a>
+//                   <p className="text-xs text-gray-500 text-center">
+//                     {folderLabel}
+//                   </p>
+//                 </div>
+//               )}
+
+//               <div className="mt-2 flex items-center gap-3">
+//                 {columns.includes("favorites") && (
+//                   <button
+//                     type="button"
+//                     onClick={() => onFavoriteToggle(doc.id)}
+//                     className="cursor-pointer text-red-500 text-[20px] leading-none"
+//                     aria-label="Toggle favorite"
+//                   >
+//                     {favoriteIds.has(doc.id) ? "\u2665" : "\u2661"}
+//                   </button>
+//                 )}
+//                 {columns.includes("downloads") && <span className="text-xs text-gray-700">{doc.downloads ?? 0} downloads</span>}
+//               </div>
+
+//               {columns.includes("download") && (
+//                 <button
+//                   onClick={() => handleDownload(doc)}
+//                   className="mt-4 inline-flex items-center justify-center rounded-full bg-blue-500 px-4 py-1.5 text-xs font-medium text-white hover:bg-blue-600 text-center cursor-pointer transition">
+//                   Download
+//                 </button>
+//               )}
+//             </div>
+//           );
+//         })}
+//       </div>
+//     </section>
+//   );
+// }
+
 function DocumentListView({
   documents,
   folderNameById,
@@ -29820,7 +30109,8 @@ function DocumentListView({
   onFavoriteToggle,
   restBase,
   restNonce,
-  folderRestrictions
+  folderRestrictions,
+  currentFolderId
 }) {
   const colWidths = {
     image: "minmax(0,1.2fr)",
@@ -29861,7 +30151,7 @@ function DocumentListView({
     return folderIds.some(fid => folderRestrictions[fid]);
   };
   const handleDownload = async doc => {
-    const accessResult = await (0,_utils_AccessControl__WEBPACK_IMPORTED_MODULE_8__.checkDocumentAccess)(doc, restBase, restNonce);
+    const accessResult = await (0,_utils_AccessControl__WEBPACK_IMPORTED_MODULE_8__.checkDocumentAccess)(doc, restBase, restNonce, currentFolderId);
     if (!accessResult.allowed) return;
 
     // Increment download count
@@ -30007,14 +30297,15 @@ function DocumentGridView({
   onFavoriteToggle,
   restBase,
   restNonce,
-  folderRestrictions
+  folderRestrictions,
+  currentFolderId
 }) {
   const isDocumentRestricted = doc => {
     const folderIds = typeof doc.folderIds === 'object' ? doc.folderIds : [doc.folderId];
     return folderIds.some(fid => folderRestrictions[fid]);
   };
   const handleDownload = async doc => {
-    const accessResult = await (0,_utils_AccessControl__WEBPACK_IMPORTED_MODULE_8__.checkDocumentAccess)(doc, restBase, restNonce);
+    const accessResult = await (0,_utils_AccessControl__WEBPACK_IMPORTED_MODULE_8__.checkDocumentAccess)(doc, restBase, restNonce, currentFolderId);
     if (!accessResult.allowed) return;
     if (restBase) {
       const headers = {
@@ -30032,6 +30323,7 @@ function DocumentGridView({
     }
     const link = document.createElement('a');
     link.href = doc.url;
+    link.target = '_blank';
     link.download = doc.title;
     document.body.appendChild(link);
     link.click();
@@ -30061,7 +30353,21 @@ function DocumentGridView({
       d: "M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"
     }))), columns.includes("image") && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
       className: `mb-[20px] mt-[10px] flex h-14 w-14 items-center justify-center rounded-2xl ${meta.bg} ${meta.color} text-xs font-semibold`
-    }, meta.label), columns.includes("title") && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    }, doc.image ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("img", {
+      src: doc.image,
+      alt: doc.title,
+      className: "h-10 w-10 object-cover rounded"
+    }), isRestricted && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
+      className: "absolute -top-1 -right-1 text-yellow-500"
+    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("svg", {
+      viewBox: "0 0 24 24",
+      fill: "currentColor",
+      className: "h-4 w-4"
+    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("path", {
+      d: "M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"
+    })))) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+      className: `flex h-9 w-9 items-center justify-center rounded-lg ${meta.bg} ${meta.color} text-xs font-semibold relative`
+    }, meta.label)), columns.includes("title") && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
       className: "flex-1 space-y-1 text-sm text-center"
     }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
       onClick: () => openPreview(doc),
@@ -30070,12 +30376,12 @@ function DocumentGridView({
       className: "text-xs text-gray-500 text-center"
     }, folderLabel)), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
       className: "mt-2 flex items-center gap-3"
-    }, columns.includes("favorites") && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    }, columns.includes("favorites") && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
       type: "button",
       onClick: () => onFavoriteToggle(doc.id),
       className: "cursor-pointer text-red-500 text-[20px] leading-none",
       "aria-label": "Toggle favorite"
-    }, favoriteIds.has(doc.id) ? "\u2665" : "\u2661"), columns.includes("downloads") && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
+    }, favoriteIds.has(doc.id) ? "\u2665" : "\u2661")), columns.includes("downloads") && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
       className: "text-xs text-gray-700"
     }, (_doc$downloads2 = doc.downloads) !== null && _doc$downloads2 !== void 0 ? _doc$downloads2 : 0, " downloads")), columns.includes("download") && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
       onClick: () => handleDownload(doc),
@@ -31090,8 +31396,9 @@ async function checkAccess(termId, taxonomy, action, restBase, restNonce) {
 
 /**
  * Check access to a document by checking all its folder/library associations
+ * Uses "ANY" logic: User needs access to AT LEAST ONE library containing the document
  */
-async function checkDocumentAccess(document, restBase, restNonce) {
+async function checkDocumentAccess(document, restBase, restNonce, currentFolderId = null) {
   // Get all folder IDs this document belongs to
   const getFolderIds = doc => {
     var _ref, _ref2, _doc$folderIds;
@@ -31113,17 +31420,36 @@ async function checkDocumentAccess(document, restBase, restNonce) {
     };
   }
 
-  // Check access to each folder
+  // Strategy: If viewing from specific folder context, only check that folder
+  // Otherwise check if user has access to ANY of the folders
+  if (currentFolderId && folderIds.includes(Number(currentFolderId))) {
+    // Context-aware: Only check the current folder
+    return await checkAccess(currentFolderId, 'ldl_library', 'view', restBase, restNonce);
+  }
+
+  // Check access to each folder - need access to AT LEAST ONE
+  let hasAccessToAny = false;
+  let lastDenialReason = {
+    allowed: false,
+    reason: 'no_access'
+  };
   for (const folderId of folderIds) {
     const result = await checkAccess(folderId, 'ldl_library', 'view', restBase, restNonce);
-    if (!result.allowed) {
-      return result; // Return first restriction encountered
+    if (result.allowed) {
+      hasAccessToAny = true;
+      break; // Found accessible folder, allow access
     }
+    lastDenialReason = result; // Keep track of last denial for error message
   }
-  return {
-    allowed: true,
-    reason: ''
-  };
+  if (hasAccessToAny) {
+    return {
+      allowed: true,
+      reason: ''
+    };
+  }
+
+  // User has no access to any folder containing this document
+  return lastDenialReason;
 }
 
 /**

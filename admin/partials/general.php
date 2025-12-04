@@ -101,26 +101,6 @@ $general_settings = get_option( 'ldl_general_settings' );
 				</span>
 				<p class="ld-clear"></p>
 			</div>
-			<div class="sfwd_input sfwd_input_type_checkbox sfwd_input_type_checkbox--ldl_settings_enable_libraries_restriction">
-				<span class="sfwd_option_label">
-					<a class="sfwd_help_text_link" style="cursor:pointer;" title="Click for Help!" onclick="toggleVisibility('ldl_settings_enable_libraries_restriction_tip');">
-						<img alt="" src="<?php echo esc_url(LEARNDASH_DOCUMENT_LIBRARY_URL . '/admin/images/question.png'); ?>" />
-						<label for="ldl_enable_libraries_restriction" class="sfwd_label"><?php esc_html_e( 'Enable Libraries Restriction', 'learndash-document-library' ); ?></label>
-					</a>
-					<div id="ldl_settings_enable_libraries_restriction_tip" class="sfwd_help_text_div" style="display: none;">
-						<label class="sfwd_help_text"><?php esc_html_e( 'Check to enable restriction on libraries.', 'learndash-document-library' ); ?></label>
-					</div>
-				</span>
-				<span class="sfwd_option_input">
-					<div class="sfwd_option_div">
-						<label style="display: inline-block; margin-right: 15px;">
-							<input type="checkbox" name="ldl_enable_libraries_restriction" id="ldl_enable_libraries_restriction" value="1" <?php checked( !empty($general_settings['enable_libraries_restriction']) ); ?> />
-							<?php // esc_html_e( 'Enable Libraries Restriction', 'learndash-document-library' ); ?>
-						</label><br />
-					</div>
-				</span>
-				<p class="ld-clear"></p>
-			</div>
 			<div class="sfwd_input sfwd_input_type_checkbox sfwd_input_type_checkbox--ldl_settings_enable_categories_filter">
 				<span class="sfwd_option_label">
 					<a class="sfwd_help_text_link" style="cursor:pointer;" title="Click for Help!" onclick="toggleVisibility('ldl_settings_enable_categories_filter_tip');">
@@ -141,26 +121,6 @@ $general_settings = get_option( 'ldl_general_settings' );
 				</span>
 				<p class="ld-clear"></p>
 			</div>
-			<div class="sfwd_input sfwd_input_type_checkbox sfwd_input_type_checkbox--ldl_settings_enable_categories_restriction">
-				<span class="sfwd_option_label">
-					<a class="sfwd_help_text_link" style="cursor:pointer;" title="Click for Help!" onclick="toggleVisibility('ldl_settings_enable_categories_restriction_tip');">
-						<img alt="" src="<?php echo esc_url(LEARNDASH_DOCUMENT_LIBRARY_URL . '/admin/images/question.png'); ?>" />
-						<label for="ldl_enable_categories_restriction" class="sfwd_label"><?php esc_html_e( 'Enable Categories Restriction', 'learndash-document-library' ); ?></label>
-					</a>
-					<div id="ldl_settings_enable_categories_restriction_tip" class="sfwd_help_text_div" style="display: none;">
-						<label class="sfwd_help_text"><?php esc_html_e( 'Check to enable restriction on categories.', 'learndash-document-library' ); ?></label>
-					</div>
-				</span>
-				<span class="sfwd_option_input">
-					<div class="sfwd_option_div">
-						<label style="display: inline-block; margin-right: 15px;">
-							<input type="checkbox" name="ldl_enable_categories_restriction" id="ldl_enable_categories_restriction" value="1" <?php checked( !empty($general_settings['enable_categories_restriction']) ); ?> />
-							<?php // esc_html_e( 'Enable Categories Restriction', 'learndash-document-library' ); ?>
-						</label><br />
-					</div>
-				</span>
-				<p class="ld-clear"></p>
-			</div>
 			<div class="sfwd_input sfwd_input_type_checkbox sfwd_input_type_checkbox--ldl_settings_enable_library_upload">
 				<span class="sfwd_option_label">
 					<a class="sfwd_help_text_link" style="cursor:pointer;" title="Click for Help!" onclick="toggleVisibility('ldl_settings_enable_library_upload_tip');">
@@ -176,6 +136,26 @@ $general_settings = get_option( 'ldl_general_settings' );
 						<label style="display: inline-block; margin-right: 15px;">
 							<input type="checkbox" name="ldl_enable_library_upload" id="ldl_enable_library_upload" value="1" <?php checked( !empty($general_settings['enable_library_upload']) ); ?> />
 							<?php // esc_html_e( 'Enable Libraries Upload', 'learndash-document-library' ); ?>
+						</label><br />
+					</div>
+				</span>
+				<p class="ld-clear"></p>
+			</div>
+			<div class="sfwd_input sfwd_input_type_checkbox sfwd_input_type_checkbox--ldl_settings_enable_libraries_restriction">
+				<span class="sfwd_option_label">
+					<a class="sfwd_help_text_link" style="cursor:pointer;" title="Click for Help!" onclick="toggleVisibility('ldl_settings_enable_libraries_restriction_tip');">
+						<img alt="" src="<?php echo esc_url(LEARNDASH_DOCUMENT_LIBRARY_URL . '/admin/images/question.png'); ?>" />
+						<label for="ldl_enable_libraries_restriction" class="sfwd_label"><?php esc_html_e( 'Enable Libraries Restriction', 'learndash-document-library' ); ?></label>
+					</a>
+					<div id="ldl_settings_enable_libraries_restriction_tip" class="sfwd_help_text_div" style="display: none;">
+						<label class="sfwd_help_text"><?php esc_html_e( 'Check to enable restriction on libraries.', 'learndash-document-library' ); ?></label>
+					</div>
+				</span>
+				<span class="sfwd_option_input">
+					<div class="sfwd_option_div">
+						<label style="display: inline-block; margin-right: 15px;">
+							<input type="checkbox" name="ldl_enable_libraries_restriction" id="ldl_enable_libraries_restriction" value="1" <?php checked( !empty($general_settings['enable_libraries_restriction']) ); ?> />
+							<?php // esc_html_e( 'Enable Libraries Restriction', 'learndash-document-library' ); ?>
 						</label><br />
 					</div>
 				</span>
@@ -287,8 +267,9 @@ $general_settings = get_option( 'ldl_general_settings' );
 		}
 		function toggleRestrictionFields() {
 			const libChecked = $('#ldl_enable_libraries_restriction').is(':checked');
-			const catChecked = $('#ldl_enable_categories_restriction').is(':checked');
-			if (libChecked || catChecked) {
+			// const catChecked = $('#ldl_enable_categories_restriction').is(':checked');
+			// if (libChecked || catChecked) {
+			if (libChecked) {
 				$('.sfwd_input_type_text--ldl_settings_global_password, .sfwd_input_type_select--ldl_settings_global_user_roles').show();
 			} else {
 				$('.sfwd_input_type_text--ldl_settings_global_password, .sfwd_input_type_select--ldl_settings_global_user_roles').hide();
@@ -297,9 +278,9 @@ $general_settings = get_option( 'ldl_general_settings' );
 			}
 		}
 		$(document).ready(function(){
-			toggleCategoriesRestrictionField();
+			// toggleCategoriesRestrictionField();
 			toggleRestrictionFields();
-			$('#ldl_enable_categories_filter').on('change', toggleCategoriesRestrictionField);
+			// $('#ldl_enable_categories_filter').on('change', toggleCategoriesRestrictionField);
 			$('input').on('change', toggleRestrictionFields)
 		});
 	})(jQuery);
